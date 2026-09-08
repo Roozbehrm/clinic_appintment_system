@@ -1,139 +1,115 @@
 {% extends 'base.html' %}
 
-{% block title %}کیف پول{% endblock %}
+{% block title %}
+کیف پول
+{% endblock %}
 
 {% block content %}
 
-<div class="row justify-content-center">
-    <div class="col-lg-8">
+<div class="wallet-container">
 
-        <div class="card shadow-sm mb-4">
-            <div class="card-body text-center">
+```
+<!-- ========================= -->
+<!-- موجودی کیف پول -->
+<!-- ========================= -->
 
-                <i class="bi bi-wallet2 fs-1"></i>
+<section class="wallet-balance">
+    <h1>کیف پول من</h1>
 
-                <h2 class="mt-3">کیف پول من</h2>
-
-                <p class="text-muted mb-2">موجودی فعلی</p>
-
-                <h3 class="fw-bold">
-                    {{ wallet.balance }} تومان
-                </h3>
-
-                <a href="{% url 'payments:wallet_top_up' %}"
-                   class="btn btn-primary mt-3">
-                    <i class="bi bi-plus-circle"></i>
-                    افزایش موجودی
-                </a>
-
-            </div>
-        </div>
+    <p>
+        موجودی فعلی:
+        <strong>{{ wallet.balance }}</strong>
+        تومان
+    </p>
+</section>
 
 
-        <div class="card shadow-sm">
+<!-- ========================= -->
+<!-- افزایش موجودی -->
+<!-- ========================= -->
 
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-clock-history"></i>
-                    تاریخچه تراکنش‌ها
-                </h5>
-            </div>
+<section class="wallet-top-up">
 
-            <div class="card-body p-0">
+    <h2>افزایش موجودی</h2>
 
-                {% if transactions %}
+    <form method="post" action="{% url 'payments:wallet_top_up' %}">
 
-                <div class="table-responsive">
+        {% csrf_token %}
 
-                    <table class="table table-hover mb-0">
+        {{ form.as_p }}
 
-                        <thead>
-                            <tr>
-                                <th>مبلغ</th>
-                                <th>نوع</th>
-                                <th>وضعیت</th>
-                                <th>تاریخ</th>
-                            </tr>
-                        </thead>
+        <button type="submit">
+            افزایش موجودی
+        </button>
 
-                        <tbody>
+    </form>
 
-                        {% for transaction in transactions %}
+</section>
 
-                            <tr>
 
-                                <td>
-                                    {{ transaction.amount }} تومان
-                                </td>
+<!-- ========================= -->
+<!-- تاریخچه تراکنش‌ها -->
+<!-- ========================= -->
 
-                                <td>
-                                    {% if transaction.type == 'deposit' %}
-                                        <span class="text-success">
-                                            افزایش موجودی
-                                        </span>
+<section class="wallet-transactions">
 
-                                    {% elif transaction.type == 'payment' %}
-                                        <span class="text-danger">
-                                            پرداخت
-                                        </span>
+    <h2>تاریخچه تراکنش‌ها</h2>
 
-                                    {% elif transaction.type == 'refund' %}
-                                        <span class="text-primary">
-                                            بازگشت وجه
-                                        </span>
-                                    {% endif %}
-                                </td>
+    {% if transactions %}
 
-                                <td>
-                                    {% if transaction.status == 'success' %}
-                                        <span class="badge bg-success">
-                                            موفق
-                                        </span>
+        <table>
 
-                                    {% elif transaction.status == 'failed' %}
-                                        <span class="badge bg-danger">
-                                            ناموفق
-                                        </span>
+            <thead>
+                <tr>
+                    <th>مبلغ</th>
+                    <th>نوع تراکنش</th>
+                    <th>وضعیت</th>
+                    <th>تاریخ</th>
+                </tr>
+            </thead>
 
-                                    {% elif transaction.status == 'pending' %}
-                                        <span class="badge bg-warning text-dark">
-                                            در انتظار
-                                        </span>
-                                    {% endif %}
-                                </td>
+            <tbody>
 
-                                <td>
-                                    {{ transaction.created_at|date:"Y/m/d H:i" }}
-                                </td>
+                {% for transaction in transactions %}
 
-                            </tr>
+                    <tr>
 
-                        {% endfor %}
+                        <td>
+                            {{ transaction.amount }}
+                            تومان
+                        </td>
 
-                        </tbody>
+                        <td>
+                            {{ transaction.type }}
+                        </td>
 
-                    </table>
+                        <td>
+                            {{ transaction.status }}
+                        </td>
 
-                </div>
+                        <td>
+                            {{ transaction.created_at }}
+                        </td>
 
-                {% else %}
+                    </tr>
 
-                    <div class="text-center py-5">
+                {% endfor %}
 
-                        <i class="bi bi-receipt fs-1 text-muted"></i>
+            </tbody>
 
-                        <p class="text-muted mt-3">
-                            هنوز تراکنشی ثبت نشده است.
-                        </p>
+        </table>
 
-                    </div>
+    {% else %}
 
-                {% endif %}
+        <p>
+            هنوز تراکنشی برای کیف پول شما ثبت نشده است.
+        </p>
 
-            </div>
-        </div>
+    {% endif %}
 
-    </div>
+</section>
+```
+
 </div>
 
 {% endblock %}
