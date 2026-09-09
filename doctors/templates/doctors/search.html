@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>جستجوی پزشکان</h1>
+
+<form method="get">
+
+    <div>
+        {{ form.q.label_tag }}
+        {{ form.q }}
+    </div>
+
+    <div>
+        {{ form.specialty.label_tag }}
+        {{ form.specialty }}
+    </div>
+
+    <button type="submit">جستجو</button>
+
+</form>
+
+
+<hr>
+
+
+{% if doctors %}
+
+    <h2>پزشکان</h2>
+
+    {% for doctor in doctors %}
+
+        <div>
+            <h3>{{ doctor.profile.full_name }}</h3>
+
+            <p>
+                تخصص:
+                {{ doctor.specialty.name }}
+            </p>
+
+            {% if doctor.bio %}
+                <p>
+                    {{ doctor.bio }}
+                </p>
+            {% endif %}
+
+            <p>
+                هزینه ویزیت:
+                {{ doctor.consultation_fee }}
+            </p>
+
+            {% if doctor.is_active %}
+                <p>وضعیت: فعال</p>
+            {% endif %}
+        </div>
+
+        <hr>
+
+    {% endfor %}
+
+{% else %}
+
+    <p>پزشکی با این مشخصات پیدا نشد.</p>
+
+{% endif %}
+
+{% endblock %}
