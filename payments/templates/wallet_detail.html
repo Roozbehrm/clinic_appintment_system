@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}
+کیف پول
+{% endblock %}
+
+{% block content %}
+
+<div class="wallet-container">
+
+```
+<!-- ========================= -->
+<!-- موجودی کیف پول -->
+<!-- ========================= -->
+
+<section class="wallet-balance">
+    <h1>کیف پول من</h1>
+
+    <p>
+        موجودی فعلی:
+        <strong>{{ wallet.balance }}</strong>
+        تومان
+    </p>
+</section>
+
+
+<!-- ========================= -->
+<!-- افزایش موجودی -->
+<!-- ========================= -->
+
+<section class="wallet-top-up">
+
+    <h2>افزایش موجودی</h2>
+
+    <form method="post" action="{% url 'payments:wallet_top_up' %}">
+
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <button type="submit">
+            افزایش موجودی
+        </button>
+
+    </form>
+
+</section>
+
+
+<!-- ========================= -->
+<!-- تاریخچه تراکنش‌ها -->
+<!-- ========================= -->
+
+<section class="wallet-transactions">
+
+    <h2>تاریخچه تراکنش‌ها</h2>
+
+    {% if transactions %}
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>مبلغ</th>
+                    <th>نوع تراکنش</th>
+                    <th>وضعیت</th>
+                    <th>تاریخ</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for transaction in transactions %}
+
+                    <tr>
+
+                        <td>
+                            {{ transaction.amount }}
+                            تومان
+                        </td>
+
+                        <td>
+                            {{ transaction.type }}
+                        </td>
+
+                        <td>
+                            {{ transaction.status }}
+                        </td>
+
+                        <td>
+                            {{ transaction.created_at }}
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    {% else %}
+
+        <p>
+            هنوز تراکنشی برای کیف پول شما ثبت نشده است.
+        </p>
+
+    {% endif %}
+
+</section>
+```
+
+</div>
+
+{% endblock %}

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,11 +38,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites'
+    'allauth',
+    'allauth.accounts',
+    'allauth.socialaccount',
+    'allauth.socialacount.providers.google',
     'accounts',
     'appointments',
     'doctors',
     'patients',
     'payments',
+    'reviews',
 ]
 
 MIDDLEWARE = [
@@ -50,8 +57,10 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    "allauth.account.middleware.AccountMiddleware",
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'clinic_appointment_system.urls'
@@ -59,13 +68,14 @@ ROOT_URLCONF = 'clinic_appointment_system.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'patients.context_processors.wallet_balance'
             ],
         },
     },
@@ -103,6 +113,24 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+SOCIALACCOUNT_ADAPTER = 'accounts.adapters.CustomSocialAccountAdapter'
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APPS': [
+            {
+                'client_id': config('GOOGLE_CLIENT_ID'),
+                'secret': config('GOOGLE_CLIENT_SECRET'),
+                'key': '',
+            }
+        ]
+    }
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
@@ -115,13 +143,28 @@ USE_I18N = True
 
 USE_TZ = True
 
+SITE_ID = 1
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
 
+STATIC_ROOT = BASE_DIR / 'static'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+STATICFILES_DIRS = [
+    BASE_DIR / "statics",
+]
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+OTP_EXPIRY_MINUTES = 5
+
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "accounts:redirect_after_login"
+LOGOUT_REDIRECT_URL = "accounts:login"

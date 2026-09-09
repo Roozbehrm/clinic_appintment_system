@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    نوبت‌های من
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <h2>نوبت‌های من</h2>
+
+    {% if appointments %}
+
+        {% for appointment in appointments %}
+
+            <div class="appointment-card">
+
+                <h3>
+                    دکتر {{appointment.time_slot_id.doctor_id.profile_id.full_name }}
+                </h3>
+
+                <p>
+                   تخصص: 
+                    {{ appointment.time_slot_id.doctor_id.specialty_id.name }}
+                </p>
+
+                <p>
+                    تاریخ:
+                    {{ appointment.time_slot_id.visit_date }}
+                </p>
+
+                <p>
+                   ساعت:
+                    {{ appointment.time_slot_id.start_time }}
+                </p>
+
+                <p>
+                    وضعیت:
+                    {{ appointment.status }}
+                </p>
+
+                <p>
+                    هزینه:
+                    {{ appointment.price }}
+                </p>
+
+                {# لغو نوبت برای pending و confirmed #}
+                {% if appointment.status == 'pending' or appointment.status == 'confirmed' %}
+
+                    <a href="{% url 'appointments:cancel_appointment' appointment.id %}">
+                        لغو نوبت
+                    </a>
+
+                {% endif %}
+
+
+                {# ثبت نظر برای نوبت‌هایی که قابل نظردهی هستند #}
+                {% if appointment.is_reviewable %}
+
+                    <a href="{% url 'reviews:add_review' appointment.id %}">
+                        ثبت نظر
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+            <hr>
+
+        {% endfor %}
+
+    {% else %}
+
+        <p>هنوز نوبتی ندارید.</p>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
