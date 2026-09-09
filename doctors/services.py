@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 
+from django.utils import timezone
+
 from .models import TimeSlot, PY_WEEKDAY_TO_OUR
 
 
@@ -7,9 +9,9 @@ def generate_time_slots(doctor, days_ahead=14):
 
     created_count = 0
 
-    today = datetime.now().date()
+    today = timezone.localdate()
 
-    for day_offset in range(days_ahead):
+    for day_offset in range(days_ahead + 1):
         visit_date = today + timedelta(days=day_offset)
 
         our_weekday = PY_WEEKDAY_TO_OUR[visit_date.weekday()]

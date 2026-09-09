@@ -101,7 +101,7 @@ class WorkingHour(models.Model):
         related_name="working_hours",
     )
 
-    day_of_wekk = models.IntegerField(
+    day_of_week = models.IntegerField(
         choices=WEEKDAYS,
     )
 
@@ -146,7 +146,7 @@ class TimeSlot(models.Model):
         related_name="time_slot",
     )
 
-    working_hour = models.ForeignKey(
+    working_hours = models.ForeignKey(
         WorkingHour,
         on_delete=models.SET_NULL,
         related_name="time_slots",
