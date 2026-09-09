@@ -1,15 +1,17 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ValidationError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views import View
 
 from accounts.forms import LoginForm
 
-from .forms import DoctorSearchForm, WorkingHourForm
+from .forms import DoctorProfileForm, DoctorSearchForm, WorkingHourForm
 from .mixin import DoctorRequiredMixin
 from .models import Doctor, Specialty, TimeSlot, WorkingHour
+from .services import generate_time_slots
 
 
 class DoctorLoginView(View):
@@ -46,7 +48,7 @@ class DoctorLoginView(View):
         if user is None:
             messages.error(
                 request,
-                "شماره تلقن یا رمز عبور اشتباه است.",
+                "شماره تلفن یا رمز عبور اشتباه است.",
             )
 
             return render(
@@ -93,7 +95,10 @@ class DashboardView(
 
     def get(self, request):
         doctor = get_object_or_404(
-            Doctor.objects.select_related("profile"),
+            Doctor.objects.select_related(
+                "profile",
+                "specialty",
+            ),
             profile__user=request.user,
         )
 
@@ -104,7 +109,7 @@ class DashboardView(
         upcoming = (
             Appointment.objects.filter(
                 time_slot__doctor=doctor,
-                status="booked",
+                status="confirmed",
                 time_slot__visit_date__gte=today,
             )
             .select_related(
@@ -123,12 +128,12 @@ class DashboardView(
 
         free_slots = TimeSlot.objects.filter(
             doctor=doctor,
-            status="free",
+            status=TimeSlot.STATUS_FREE,
         ).count()
 
         booked_slots = TimeSlot.objects.filter(
             doctor=doctor,
-            status="booked",
+            status=TimeSlot.STATUS_BOOKED,
         ).count()
 
         stats = {
@@ -146,6 +151,63 @@ class DashboardView(
                 "doctor": doctor,
                 "upcoming": upcoming,
                 "stats": stats,
+            },
+        )
+
+
+class ProfileSettingsView(LoginRequiredMixin, View):
+    login_url = "accounts:login"
+    template_name = "doctors/profile_settings.html"
+
+    def get_doctor(self, request):
+        return get_object_or_404(
+            Doctor.objects.select_related(
+                "profile",
+                "specialty",
+            ),
+            profile__user=request.user,
+        )
+
+    def get(self, request):
+        doctor = self.get_doctor(request)
+
+        form = DoctorProfileForm(
+            instance=doctor,
+        )
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "form": form,
+                "doctor": doctor,
+            },
+        )
+
+    def post(self, request):
+        doctor = self.get_doctor(request)
+
+        form = DoctorProfileForm(
+            request.POST,
+            instance=doctor,
+        )
+
+        if form.is_valid():
+            form.save()
+
+            messages.success(
+                request,
+                "اطلاعات پروفایل با موفقیت ذخیره شد.",
+            )
+
+            return redirect("doctors:profile_settings")
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "form": form,
+                "doctor": doctor,
             },
         )
 
@@ -292,3 +354,76 @@ class DeleteWorkingHourView(LoginRequiredMixin, View):
         )
 
         return redirect("doctors:working_hours")
+
+
+class GenerateSlotsView(LoginRequiredMixin, View):
+    login_url = "accounts:login"
+
+    def post(self, request):
+        doctor = get_object_or_404(
+            Doctor,
+            profile__user=request.user,
+        )
+
+        created_count = generate_time_slots(
+            doctor,
+            days_ahead=14,
+        )
+
+        if created_count:
+            messages.success(
+                request,
+                f"{created_count} اسلات جدید ساخته شد.",
+            )
+        else:
+            messages.info(
+                request,
+                "چیز جدیدی برای ساخت وجود نداشت.",
+            )
+
+        return redirect(
+            "doctors:manage_slots",
+        )
+
+
+class ManageSlotsView(LoginRequiredMixin, View):
+    login_url = "accounts:login"
+    template_name = "doctors/manage_slots.html"
+
+    def get(self, request):
+        doctor = get_object_or_404(
+            Doctor,
+            profile__user=request.user,
+        )
+
+        from appointments.services import (
+            auto_complete_past_appointments,
+        )
+
+        auto_complete_past_appointments(
+            doctor=doctor,
+        )
+
+        slots = (
+            TimeSlot.objects.filter(
+                doctor=doctor,
+            )
+            .select_related("working_hours")
+            .order_by(
+                "-visit_date",
+                "-start_time",
+            )[:100]
+        )
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "doctor": doctor,
+                "slots": slots,
+            },
+        )
+
+
+class CompleteAppointmentView(LoginRequiredMixin, View):
+    pass

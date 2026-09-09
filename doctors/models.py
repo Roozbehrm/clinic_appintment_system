@@ -150,6 +150,7 @@ class TimeSlot(models.Model):
         WorkingHour,
         on_delete=models.SET_NULL,
         related_name="time_slots",
+        null=True,
     )
 
     visit_date = models.DateField()

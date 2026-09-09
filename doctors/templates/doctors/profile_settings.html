@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>تنظیمات پروفایل پزشک</h1>
+
+<p>
+    پزشک:
+    {{ doctor.profile.full_name }}
+</p>
+
+<form method="post">
+    {% csrf_token %}
+
+    {{ form.non_field_errors }}
+
+    <div>
+        {{ form.specialty.label_tag }}
+        {{ form.specialty }}
+        {{ form.specialty.errors }}
+    </div>
+
+    <div>
+        {{ form.bio.label_tag }}
+        {{ form.bio }}
+        {{ form.bio.errors }}
+    </div>
+
+    <div>
+        {{ form.consultation_fee.label_tag }}
+        {{ form.consultation_fee }}
+        {{ form.consultation_fee.errors }}
+    </div>
+
+    <div>
+        {{ form.is_active.label_tag }}
+        {{ form.is_active }}
+        {{ form.is_active.errors }}
+    </div>
+
+    <button type="submit">
+        ذخیره تغییرات
+    </button>
+</form>
+
+{% endblock %}
