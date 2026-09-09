@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load socialaccount %}
+{% block title %}ثبت‌نام{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-5">
+    <div class="card p-4">
+      <h4 class="mb-3 text-center">ایجاد حساب کاربری</h4>
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">شماره تلفن</label>
+          {{ form.phone_number }}
+          {% for e in form.phone_number.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">ایمیل</label>
+          {{ form.email }}
+          {% for e in form.email.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          <div class="form-text">تاییدیه‌ی رزرو نوبت به همین ایمیل ارسال می‌شود.</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">رمز عبور</label>
+          {{ form.password }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">تکرار رمز عبور</label>
+          {{ form.password_confirm }}
+        </div>
+        {% if form.non_field_errors %}<div class="text-danger small mb-2">{{ form.non_field_errors }}</div>{% endif %}
+        <button class="btn btn-primary w-100" type="submit">ثبت‌نام</button>
+      </form>
+
+      <div class="d-flex align-items-center my-3">
+        <hr class="flex-grow-1"><span class="px-2 text-muted small">یا</span><hr class="flex-grow-1">
+      </div>
+      <a href="{% provider_login_url 'google' %}" class="btn btn-outline-danger w-100">
+        <i class="bi bi-google"></i> ثبت‌نام / ورود با گوگل
+      </a>
+      <p class="text-muted small text-center mt-2 mb-0">ثبت‌نام با گوگل به‌صورت پیش‌فرض با نقش «بیمار» انجام می‌شود.</p>
+
+      <p class="text-center mt-3 mb-0">حساب دارید؟ <a href="{% url 'accounts:login' %}">ورود</a></p>
+      <hr>
+      <p class="text-center small text-muted mb-0">پزشک هستید؟ حساب پزشک فقط توسط مدیریت سایت ساخته می‌شود.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

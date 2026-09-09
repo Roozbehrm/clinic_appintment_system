@@ -1,3 +1,4 @@
+
 from django.db import models
 
 # TASK T3.2 (Mahyar) 
@@ -29,8 +30,4 @@ class Appointment(models.Model):
     
 
 
-# ============ توجه ============
-# تا زمانی که روزبه و علی مرج نشده کد هاشون 
-# makemigrations 
-# رو نزنید چون جنگو دنبال مدل های اونا میگرده 
-# # ============ توجه ============
+

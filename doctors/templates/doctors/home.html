@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}نوبت‌دهی آنلاین پزشکان{% endblock %}
+{% block content %}
+<div class="p-5 mb-4 rounded-4 text-white" style="background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-dark));">
+  <div class="row align-items-center">
+    <div class="col-md-8">
+      <h2 class="fw-bold mb-3">نوبت پزشک خود را آنلاین رزرو کنید</h2>
+      <p class="mb-4">جستجوی سریع پزشکان بر اساس تخصص، مشاهده نظرات بیماران دیگر و پرداخت آسان از طریق کیف‌پول.</p>
+      <form method="get" action="{% url 'doctors:search' %}" class="d-flex gap-2">
+        <input type="text" name="q" class="form-control" placeholder="نام پزشک یا تخصص مورد نظر...">
+        <button class="btn btn-light text-primary fw-bold" type="submit">
+          <i class="bi bi-search"></i> جستجو
+        </button>
+      </form>
+    </div>
+    <div class="col-md-4 d-none d-md-block text-center">
+      <i class="bi bi-heart-pulse-fill" style="font-size: 8rem; opacity: 0.25;"></i>
+    </div>
+  </div>
+</div>
+
+{% if specialties %}
+<h5 class="mb-3">تخصص‌ها</h5>
+<div class="d-flex flex-wrap gap-2 mb-5">
+  {% for s in specialties %}
+    <a href="{% url 'doctors:search' %}?specialty={{ s.id }}" class="btn btn-outline-primary btn-sm rounded-pill">
+      {{ s.name }}
+    </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+<h5 class="mb-3">پزشکان</h5>
+<div class="row g-3">
+  {% for doctor in top_doctors %}
+  <div class="col-md-6 col-lg-4">
+    <div class="card p-3 h-100">
+      <div class="d-flex align-items-center gap-3 mb-2">
+        {% if doctor.profile.avatar %}
+          <img src="{{ doctor.profile.avatar.url }}" class="doctor-avatar">
+        {% else %}
+          <div class="doctor-avatar d-flex align-items-center justify-content-center">
+            <i class="bi bi-person fs-3 text-secondary"></i>
+          </div>
+        {% endif %}
+        <div>
+          <h6 class="mb-0">دکتر {{ doctor.profile.full_name }}</h6>
+          <small class="text-muted">{{ doctor.specialty.name|default:"—" }}</small>
+        </div>
+      </div>
+      <div class="d-flex justify-content-between align-items-center">
+        <span class="rating-badge"><i class="bi bi-star-fill"></i> {{ doctor.average_rating }}</span>
+        <span class="fw-bold">{{ doctor.consultation_fee }} تومان</span>
+      </div>
+      <a href="{% url 'doctors:detail' doctor.pk %}" class="btn btn-primary mt-3">مشاهده و رزرو نوبت</a>
+    </div>
+  </div>
+  {% empty %}
+  <p class="text-muted">هنوز پزشکی ثبت نشده است.</p>
+  {% endfor %}
+</div>
+{% endblock %}
