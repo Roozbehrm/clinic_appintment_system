@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>مدیریت ساعات کاری</h1>
+
+<h2>افزودن ساعت کاری</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    {{ form.non_field_errors }}
+
+    <div>
+        {{ form.day_of_week.label_tag }}
+        {{ form.day_of_week }}
+        {{ form.day_of_week.errors }}
+    </div>
+
+    <div>
+        {{ form.start_time.label_tag }}
+        {{ form.start_time }}
+        {{ form.start_time.errors }}
+    </div>
+
+    <div>
+        {{ form.end_time.label_tag }}
+        {{ form.end_time }}
+        {{ form.end_time.errors }}
+    </div>
+
+    <div>
+        {{ form.slot_duration_minutes.label_tag }}
+        {{ form.slot_duration_minutes }}
+        {{ form.slot_duration_minutes.errors }}
+    </div>
+
+    <button type="submit">
+        افزودن ساعت کاری
+    </button>
+</form>
+
+
+<hr>
+
+
+<h2>ساعات کاری فعلی</h2>
+
+{% if working_hours %}
+
+    {% for working_hour in working_hours %}
+
+        <div>
+            <strong>
+                {{ working_hour.get_day_of_week_display }}
+            </strong>
+
+            <span>
+                {{ working_hour.start_time }}
+                -
+                {{ working_hour.end_time }}
+            </span>
+
+            <span>
+                هر نوبت:
+                {{ working_hour.slot_duration_minutes }}
+                دقیقه
+            </span>
+
+            <form
+                method="post"
+                action="{% url 'doctors:delete_working_hour' working_hour.pk %}"
+                style="display: inline;"
+            >
+                {% csrf_token %}
+
+                <button type="submit">
+                    حذف
+                </button>
+            </form>
+        </div>
+
+    {% endfor %}
+
+{% else %}
+
+    <p>هنوز ساعت کاری ثبت نکرده‌اید.</p>
+
+{% endif %}
+
+
+<hr>
+
+
+<h2>پیش‌نمایش اسلات‌های آینده</h2>
+
+{% if slots_by_date %}
+
+    {% for visit_date, slots in slots_by_date.items %}
+
+        <h3>{{ visit_date }}</h3>
+
+        {% for slot in slots %}
+
+            <span>
+                {{ slot.start_time }}
+                -
+                {{ slot.end_time }}
+
+                {% if slot.is_free %}
+                    (آزاد)
+                {% else %}
+                    (رزرو شده)
+                {% endif %}
+            </span>
+
+            <br>
+
+        {% endfor %}
+
+    {% endfor %}
+
+{% else %}
+
+    <p>
+        هنوز اسلاتی برای نمایش وجود ندارد.
+    </p>
+
+{% endif %}
+
+{% endblock %}

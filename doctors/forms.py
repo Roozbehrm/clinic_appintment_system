@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Specialty
+from .models import Specialty, WorkingHour
 
 
 class DoctorSearchForm(forms.Form):
@@ -20,3 +20,39 @@ class DoctorSearchForm(forms.Form):
         empty_label="همه تخصص ها",
         label="تخصص",
     )
+
+
+class WorkingHourForm(forms.ModelForm):
+    class Meta:
+        model = WorkingHour
+        fields = [
+            "day_of_week",
+            "start_time",
+            "end_time",
+            "slot_duration_minutes",
+        ]
+        widget = {
+            "start_time": forms.TimeInput(
+                format="%H:%M",
+                attrs={"type": "time"},
+            ),
+            "end_time": forms.TimeInput(
+                format="%H:%M",
+                attrs={"type": "time"},
+            ),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        start_time = cleaned_data.get("start_time")
+        end_time = cleaned_data.get("end_time")
+        slot_duration = cleaned_data.get("slot_duration_minutes")
+
+        if start_time and end_time and start_time >= end_time:
+            raise forms.ValidationError("ساعت پایان باید بعد از ساعت شروع باشد.")
+
+        if slot_duration and slot_duration <= 0:
+            raise forms.ValidationError("مدت زمان هر نوبت باید بیشتر از صفر باشد.")
+
+        return cleaned_data
