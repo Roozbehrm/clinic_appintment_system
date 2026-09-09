@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>ورود با کد یکبار مصرف</h2>
+<form method="post">
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    <button type="submit">
+
+         دریافت کد ورود
+    
+    </button>
+
+</form>
+
+{% load socialaccount %}
+
+<h2> ورود با گوگل </h2>
+
+    
+<a href="{% provider_login_url 'google' %}">
+    ورود با گوگل
+</a>
+
+{% endblock %}
