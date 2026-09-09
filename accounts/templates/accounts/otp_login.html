@@ -16,4 +16,13 @@
 
 </form>
 
+{% load socialaccount %}
+
+<h2> ورود با گوگل </h2>
+
+    
+<a href="{% provider_login_url 'google' %}">
+    ورود با گوگل
+</a>
+
 {% endblock %}
