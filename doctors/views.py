@@ -1,11 +1,153 @@
 from django.contrib import messages
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views import View
 
+from accounts.forms import LoginForm
+
 from .forms import DoctorSearchForm, WorkingHourForm
+from .mixin import DoctorRequiredMixin
 from .models import Doctor, Specialty, TimeSlot, WorkingHour
+
+
+class DoctorLoginView(View):
+    template_name = "doctors/login.html"
+
+    def get(self, request):
+        form = LoginForm()
+
+        return render(
+            request,
+            self.template_name,
+            {"form": form},
+        )
+
+    def post(self, request):
+        form = LoginForm(request.POST)
+
+        if not form.is_valid():
+            return render(
+                request,
+                self.template_name,
+                {"form": form},
+            )
+
+        phone_number = form.cleaned_data["phone_number"]
+        password = form.cleaned_data["password"]
+
+        user = authenticate(
+            request,
+            username=phone_number,
+            password=password,
+        )
+
+        if user is None:
+            messages.error(
+                request,
+                "شماره تلقن یا رمز عبور اشتباه است.",
+            )
+
+            return render(
+                request,
+                self.template_name,
+                {"form": form},
+            )
+
+        if not user.is_doctor:
+            messages.error(
+                request,
+                "این حساب پزشک نیست.",
+            )
+
+            return render(
+                request,
+                self.template_name,
+                {"form": form},
+            )
+
+        if not user.is_verified:
+            messages.error(
+                request,
+                "حساب پزشک هنوز تایید نشده است.",
+            )
+
+            return render(
+                request,
+                self.template_name,
+                {"form": form},
+            )
+
+        login(request, user)
+
+        return redirect("doctors:dashboard")
+
+
+class DashboardView(
+    LoginRequiredMixin,
+    DoctorRequiredMixin,
+    View,
+):
+    login_url = "accounts:login"
+
+    def get(self, request):
+        doctor = get_object_or_404(
+            Doctor.objects.select_related("profile"),
+            profile__user=request.user,
+        )
+
+        from appointments.models import Appointment
+
+        today = timezone.localdate()
+
+        upcoming = (
+            Appointment.objects.filter(
+                time_slot__doctor=doctor,
+                status="booked",
+                time_slot__visit_date__gte=today,
+            )
+            .select_related(
+                "patient",
+                "time_slot",
+            )
+            .order_by(
+                "time_slot__visit_date",
+                "time_slot__start_time",
+            )
+        )
+
+        total_slots = TimeSlot.objects.filter(
+            doctor=doctor,
+        ).count()
+
+        free_slots = TimeSlot.objects.filter(
+            doctor=doctor,
+            status="free",
+        ).count()
+
+        booked_slots = TimeSlot.objects.filter(
+            doctor=doctor,
+            status="booked",
+        ).count()
+
+        stats = {
+            "total_slots": total_slots,
+            "free_slots": free_slots,
+            "booked_slots": booked_slots,
+            "average_rating": doctor.average_rating,
+            "review_count": doctor.review_count,
+        }
+
+        return render(
+            request,
+            "doctors/dashboard.html",
+            {
+                "doctor": doctor,
+                "upcoming": upcoming,
+                "stats": stats,
+            },
+        )
 
 
 class SearchDoctorsView(View):
