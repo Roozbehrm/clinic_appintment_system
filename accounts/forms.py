@@ -41,3 +41,15 @@ class ProfileForm(forms.ModelForm):
             "address": forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             "avatar": forms.FileInput(attrs={'class': 'form-control'}),
         }
+
+# TASK T5.3 (Mahyar)    
+class OTPVerifyForm(forms.Form):
+    code = forms.CharField(
+        max_length=6,
+        label="کد تایید",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control otp-input text-center', 
+            'placeholder': '------', 
+            'dir': 'ltr'
+        })
+    )
