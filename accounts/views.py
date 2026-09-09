@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -38,3 +38,14 @@ class RegisterView(View):
             messages.info(request, "کد تایید برای شما ارسال شد.")
             return redirect("accounts:verify_otp")
         return render(request, self.template_name, {"form": form})
+
+
+class ResendOTPView(View):
+    def get(self, request):
+        user_id = request.session.get("otp_user_id")
+        purpose = request.session.get("otp_purpose")
+        if user_id and purpose:
+            user = get_object_or_404(User, id=user_id)
+            issue_otp(user, purpose)
+            messages.info(request, "کد جدید ارسال شد.")
+        return redirect("accounts:verify_otp")
