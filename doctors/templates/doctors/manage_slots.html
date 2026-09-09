@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>مدیریت اسلات‌ها</h1>
+
+<p>
+    پزشک:
+    {{ doctor.profile.full_name }}
+</p>
+
+<form method="post" action="{% url 'doctors:generate_slots' %}">
+    {% csrf_token %}
+
+    <button type="submit">
+        ساخت اسلات‌های ۱۴ روز آینده
+    </button>
+</form>
+
+<hr>
+
+<h2>اسلات‌ها</h2>
+
+{% if slots %}
+
+    {% for slot in slots %}
+
+        <div>
+            <p>
+                تاریخ:
+                {{ slot.visit_date }}
+            </p>
+
+            <p>
+                ساعت:
+                {{ slot.start_time }}
+                -
+                {{ slot.end_time }}
+            </p>
+
+            <p>
+                وضعیت:
+                {{ slot.get_status_display }}
+            </p>
+
+            {% if slot.status == "booked" and slot.appointment %}
+                <form
+                    method="post"
+                    action="{% url 'doctors:complete_appointment' slot.appointment.pk %}"
+                >
+                    {% csrf_token %}
+
+                    <button type="submit">
+                        تکمیل نوبت
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+
+        <hr>
+
+    {% endfor %}
+
+{% else %}
+
+    <p>
+        هنوز اسلاتی برای این پزشک وجود ندارد.
+    </p>
+
+{% endif %}
+
+{% endblock %}

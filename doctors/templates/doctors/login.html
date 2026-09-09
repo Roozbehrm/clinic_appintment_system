@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>ورود پزشکان</h1>
+
+<form method="post">
+    {% csrf_token %}
+
+    {{ form.non_field_errors }}
+
+    <div>
+        {{ form.phone_number.label_tag }}
+        {{ form.phone_number }}
+        {{ form.phone_number.errors }}
+    </div>
+
+    <div>
+        {{ form.password.label_tag }}
+        {{ form.password }}
+        {{ form.password.errors }}
+    </div>
+
+    <button type="submit">
+        ورود
+    </button>
+</form>
+
+{% endblock %}

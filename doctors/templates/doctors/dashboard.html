@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>داشبورد پزشک</h1>
+
+<h2>
+    {{ doctor.profile.full_name }}
+</h2>
+
+<hr>
+
+<h2>آمار</h2>
+
+<ul>
+    <li>
+        کل اسلات‌ها:
+        {{ stats.total_slots }}
+    </li>
+
+    <li>
+        اسلات‌های آزاد:
+        {{ stats.free_slots }}
+    </li>
+
+    <li>
+        اسلات‌های رزرو شده:
+        {{ stats.booked_slots }}
+    </li>
+
+    <li>
+        میانگین امتیاز:
+        {{ stats.average_rating }}
+    </li>
+
+    <li>
+        تعداد نظرات:
+        {{ stats.review_count }}
+    </li>
+</ul>
+
+<hr>
+
+<h2>نوبت‌های پیش رو</h2>
+
+{% if upcoming %}
+
+    {% for appointment in upcoming %}
+
+        <div>
+            <p>
+                بیمار:
+                {{ appointment.patient }}
+            </p>
+
+            <p>
+                تاریخ:
+                {{ appointment.time_slot.visit_date }}
+            </p>
+
+            <p>
+                ساعت:
+                {{ appointment.time_slot.start_time }}
+                -
+                {{ appointment.time_slot.end_time }}
+            </p>
+        </div>
+
+        <hr>
+
+    {% endfor %}
+
+{% else %}
+
+    <p>
+        نوبت رزرو شده‌ای وجود ندارد.
+    </p>
+
+{% endif %}
+
+{% endblock %}
