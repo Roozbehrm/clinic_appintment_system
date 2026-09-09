@@ -4,8 +4,9 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.views import View
 
-from .forms import LoginForm, ProfileForm
+from .forms import LoginForm, ProfileForm, OTPVerifyForm
 from .services import issue_otp
+from django.contrib.auth import get_user_model
 
 # TASK T5.4 (Mahyar)
 class LoginView(View):
@@ -91,4 +92,58 @@ class CompleteProfileView(LoginRequiredMixin, View):
             messages.success(request, "پروفایل شما با موفقیت تکمیل شد.")
             return redirect('accounts:redirect_after_login')
             
+        return render(request, self.template_name, {"form": form})
+
+
+# TASK T5.3 (Mahyar)
+User = get_user_model()
+class VerifyOTPView(View):
+    template_name = "accounts/verify_otp.html"
+
+    def get(self, request):
+        # اگر شماره‌ای تو سشن نبود یعنی کاربر از صفحه لاگین نیومده
+        if 'auth_phone' not in request.session:
+            messages.error(request, "ابتدا شماره تلفن خود را وارد کنید.")
+            return redirect('accounts:login')
+            
+        form = OTPVerifyForm()
+        return render(request, self.template_name, {"form": form})
+
+    def post(self, request):
+        if 'auth_phone' not in request.session:
+            return redirect('accounts:login')
+            
+        form = OTPVerifyForm(request.POST)
+        if form.is_valid():
+            phone = request.session['auth_phone']
+            code = form.cleaned_data.get('code')
+            
+            try:
+                user = User.objects.get(phone_number=phone)
+                
+                # (T5.1 )
+                # TODO: بعد مرج از کامنت در میاریم
+                # from .services import verify_otp_code
+                # is_valid = verify_otp_code(user, code)
+                is_valid = True  
+                
+                if is_valid:
+                    # تایید کردن حساب کاربر
+                    user.is_verified = True
+                    user.save()
+                    
+                    # لاگین کردن کاربر
+                    login(request, user)
+                    
+                    # پاک کردن شماره از سشن
+                    del request.session['auth_phone']
+                    
+                    messages.success(request, "حساب شما با موفقیت تایید شد.")
+                    return redirect('accounts:redirect_after_login')
+                else:
+                    messages.error(request, "کد وارد شده نامعتبر یا منقضی شده است.")
+            except User.DoesNotExist:
+                messages.error(request, "کاربری با این شماره یافت نشد.")
+                return redirect('accounts:login')
+                
         return render(request, self.template_name, {"form": form})
