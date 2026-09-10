@@ -170,3 +170,17 @@ OTP_EXPIRY_MINUTES = 5
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "accounts:redirect_after_login"
 LOGOUT_REDIRECT_URL = "accounts:login"
+
+
+# ==========================================
+# SMS Configuration Mahyar
+# ==========================================
+
+SMS_BACKEND = "sms.backends.mellipayamak.MelliPayamakBackend"
+
+# اطلاعات پنل ملی پیامک 
+SMS_USERNAME = ""
+SMS_PASSWORD = ""
+SMS_SENDER_LINE = ""
+
+AUTH_USER_MODEL = ''
