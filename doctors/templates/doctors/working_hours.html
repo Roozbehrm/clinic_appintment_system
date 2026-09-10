@@ -1,131 +1,103 @@
 {% extends "base.html" %}
-
+{% block title %}ساعات کاری{% endblock %}
 {% block content %}
-
-<h1>مدیریت ساعات کاری</h1>
-
-<h2>افزودن ساعت کاری</h2>
-
-<form method="post">
-    {% csrf_token %}
-
-    {{ form.non_field_errors }}
-
-    <div>
-        {{ form.day_of_week.label_tag }}
-        {{ form.day_of_week }}
-        {{ form.day_of_week.errors }}
-    </div>
-
-    <div>
-        {{ form.start_time.label_tag }}
-        {{ form.start_time }}
-        {{ form.start_time.errors }}
-    </div>
-
-    <div>
-        {{ form.end_time.label_tag }}
-        {{ form.end_time }}
-        {{ form.end_time.errors }}
-    </div>
-
-    <div>
-        {{ form.slot_duration_minutes.label_tag }}
-        {{ form.slot_duration_minutes }}
-        {{ form.slot_duration_minutes.errors }}
-    </div>
-
-    <button type="submit">
-        افزودن ساعت کاری
-    </button>
-</form>
-
-
-<hr>
-
-
-<h2>ساعات کاری فعلی</h2>
-
-{% if working_hours %}
-
-    {% for working_hour in working_hours %}
-
-        <div>
-            <strong>
-                {{ working_hour.get_day_of_week_display }}
-            </strong>
-
-            <span>
-                {{ working_hour.start_time }}
-                -
-                {{ working_hour.end_time }}
-            </span>
-
-            <span>
-                هر نوبت:
-                {{ working_hour.slot_duration_minutes }}
-                دقیقه
-            </span>
-
-            <form
-                method="post"
-                action="{% url 'doctors:delete_working_hour' working_hour.pk %}"
-                style="display: inline;"
-            >
-                {% csrf_token %}
-
-                <button type="submit">
-                    حذف
-                </button>
-            </form>
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card p-4">
+      <h5 class="mb-3">افزودن ساعت کاری جدید</h5>
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">روز هفته</label>
+          {{ form.day_of_week }}
         </div>
+        <div class="row">
+          <div class="col-6 mb-3">
+            <label class="form-label">شروع</label>
+            {{ form.start_time }}
+          </div>
+          <div class="col-6 mb-3">
+            <label class="form-label">پایان</label>
+            {{ form.end_time }}
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">مدت هر نوبت (دقیقه)</label>
+          {{ form.slot_duration_minutes }}
+        </div>
+        {% if form.non_field_errors %}<div class="text-danger small mb-2">{{ form.non_field_errors }}</div>{% endif %}
+        <button class="btn btn-primary w-100" type="submit">افزودن</button>
+      </form>
+    </div>
 
-    {% endfor %}
+    <div class="card p-4 mt-3 text-center">
+      <i class="bi bi-magic fs-2 text-success mb-2"></i>
+      <h6>تولید خودکار نوبت‌های خالی</h6>
+      <p class="text-muted small">با یک کلیک، بر اساس ساعات کاری بالا، نوبت‌های خالی ۱۴ روز آینده ساخته می‌شود.</p>
+      <form method="post" action="{% url 'doctors:generate_slots' %}">
+        {% csrf_token %}
+        <button class="btn btn-success w-100" type="submit">
+          <i class="bi bi-lightning-charge-fill"></i> ساخت نوبت‌های خالی
+        </button>
+      </form>
+    </div>
+  </div>
 
-{% else %}
+  <div class="col-lg-7">
+    <div class="card p-4">
+      <h5 class="mb-3">ساعات کاری فعلی</h5>
+      <table class="table align-middle">
+        <thead><tr><th>روز</th><th>شروع</th><th>پایان</th><th>مدت نوبت</th><th></th></tr></thead>
+        <tbody>
+          {% for wh in hours %}
+          <tr>
+            <td>{{ wh.get_day_of_week_display }}</td>
+            <td>{{ wh.start_time }}</td>
+            <td>{{ wh.end_time }}</td>
+            <td>{{ wh.slot_duration_minutes }} دقیقه</td>
+            <td>
+              <form method="post" action="{% url 'doctors:delete_working_hour' wh.pk %}" onsubmit="return confirm('حذف شود؟');">
+                {% csrf_token %}
+                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-muted text-center">هنوز ساعت کاری ثبت نشده است.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
-    <p>هنوز ساعت کاری ثبت نکرده‌اید.</p>
-
-{% endif %}
-
-
-<hr>
-
-
-<h2>پیش‌نمایش اسلات‌های آینده</h2>
-
-{% if slots_by_date %}
-
-    {% for visit_date, slots in slots_by_date.items %}
-
-        <h3>{{ visit_date }}</h3>
-
-        {% for slot in slots %}
-
-            <span>
-                {{ slot.start_time }}
-                -
-                {{ slot.end_time }}
-
-                {% if slot.is_free %}
-                    (آزاد)
-                {% else %}
-                    (رزرو شده)
-                {% endif %}
-            </span>
-
-            <br>
-
-        {% endfor %}
-
-    {% endfor %}
-
-{% else %}
-
-    <p>
-        هنوز اسلاتی برای نمایش وجود ندارد.
-    </p>
-
-{% endif %}
-
+    <div class="card p-4 mt-3">
+      <h5 class="mb-3">نوبت‌های خالی ساخته‌شده <span class="text-muted small">(۱۴ روز آینده)</span></h5>
+      {% if slots_by_date %}
+        <ul class="nav nav-pills mb-3 flex-wrap">
+          {% for date, slots in slots_by_date.items %}
+            <li class="nav-item">
+              <button class="nav-link {% if forloop.first %}active{% endif %}" data-bs-toggle="pill" data-bs-target="#wh-d{{ forloop.counter }}">
+                {{ date }} <span class="badge bg-light text-dark">{{ slots|length }}</span>
+              </button>
+            </li>
+          {% endfor %}
+        </ul>
+        <div class="tab-content">
+          {% for date, slots in slots_by_date.items %}
+            <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="wh-d{{ forloop.counter }}">
+              <div class="d-flex flex-wrap gap-2">
+                {% for slot in slots %}
+                  <span class="badge {% if slot.status == 'free' %}bg-success{% elif slot.status == 'booked' %}bg-primary{% else %}bg-secondary{% endif %} p-2">
+                    {{ slot.start_time }} - {{ slot.end_time }}
+                  </span>
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">هنوز نوبتی ساخته نشده. ابتدا ساعت کاری اضافه کنید و سپس روی «ساخت نوبت‌های خالی» بزنید.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
 {% endblock %}

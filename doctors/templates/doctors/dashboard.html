@@ -1,81 +1,36 @@
 {% extends "base.html" %}
-
+{% block title %}داشبورد پزشک{% endblock %}
 {% block content %}
+<h4 class="mb-4">داشبورد دکتر {{ doctor.profile.full_name }}</h4>
 
-<h1>داشبورد پزشک</h1>
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-6"><div class="stat-card bg-1"><div class="small">کل اسلات‌ها</div><div class="fs-3 fw-bold">{{ stats.total_slots }}</div></div></div>
+  <div class="col-md-3 col-6"><div class="stat-card bg-2"><div class="small">خالی (آینده)</div><div class="fs-3 fw-bold">{{ stats.free_slots }}</div></div></div>
+  <div class="col-md-3 col-6"><div class="stat-card bg-3"><div class="small">رزرو شده (آینده)</div><div class="fs-3 fw-bold">{{ stats.booked_slots }}</div></div></div>
+  <div class="col-md-3 col-6"><div class="stat-card bg-4"><div class="small">امتیاز</div><div class="fs-3 fw-bold"><i class="bi bi-star-fill"></i> {{ stats.rating }}</div></div></div>
+</div>
 
-<h2>
-    {{ doctor.profile.full_name }}
-</h2>
+<div class="d-flex gap-2 mb-4">
+  <a href="{% url 'doctors:working_hours' %}" class="btn btn-primary"><i class="bi bi-clock"></i> مدیریت ساعات کاری</a>
+  <a href="{% url 'doctors:manage_slots' %}" class="btn btn-outline-primary"><i class="bi bi-calendar3"></i> مشاهده نوبت‌ها</a>
+  <a href="{% url 'doctors:profile_settings' %}" class="btn btn-outline-secondary"><i class="bi bi-gear"></i> تنظیمات پروفایل</a>
+</div>
 
-<hr>
-
-<h2>آمار</h2>
-
-<ul>
-    <li>
-        کل اسلات‌ها:
-        {{ stats.total_slots }}
-    </li>
-
-    <li>
-        اسلات‌های آزاد:
-        {{ stats.free_slots }}
-    </li>
-
-    <li>
-        اسلات‌های رزرو شده:
-        {{ stats.booked_slots }}
-    </li>
-
-    <li>
-        میانگین امتیاز:
-        {{ stats.average_rating }}
-    </li>
-
-    <li>
-        تعداد نظرات:
-        {{ stats.review_count }}
-    </li>
-</ul>
-
-<hr>
-
-<h2>نوبت‌های پیش رو</h2>
-
-{% if upcoming %}
-
-    {% for appointment in upcoming %}
-
-        <div>
-            <p>
-                بیمار:
-                {{ appointment.patient }}
-            </p>
-
-            <p>
-                تاریخ:
-                {{ appointment.time_slot.visit_date }}
-            </p>
-
-            <p>
-                ساعت:
-                {{ appointment.time_slot.start_time }}
-                -
-                {{ appointment.time_slot.end_time }}
-            </p>
-        </div>
-
-        <hr>
-
-    {% endfor %}
-
-{% else %}
-
-    <p>
-        نوبت رزرو شده‌ای وجود ندارد.
-    </p>
-
-{% endif %}
-
+<div class="card p-4">
+  <h5 class="mb-3">نوبت‌های نزدیک</h5>
+  <table class="table">
+    <thead><tr><th>بیمار</th><th>تاریخ</th><th>ساعت</th></tr></thead>
+    <tbody>
+      {% for slot in upcoming %}
+      <tr>
+        <td>{{ slot.appointment.patient.profile.full_name }}</td>
+        <td>{{ slot.visit_date }}</td>
+        <td>{{ slot.start_time }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3" class="text-muted text-center">نوبتی ثبت نشده است.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% endblock %}

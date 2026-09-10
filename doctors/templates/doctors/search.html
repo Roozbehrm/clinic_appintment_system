@@ -1,67 +1,49 @@
 {% extends "base.html" %}
-
+{% block title %}جستجوی پزشک{% endblock %}
 {% block content %}
-
-<h1>جستجوی پزشکان</h1>
-
-<form method="get">
-
-    <div>
-        {{ form.q.label_tag }}
-        {{ form.q }}
+<div class="card p-4 mb-4">
+  <form method="get" class="row g-2 align-items-center">
+    <div class="col-md-8">
+      {{ form.q }}
     </div>
-
-    <div>
-        {{ form.specialty.label_tag }}
-        {{ form.specialty }}
+    <div class="col-md-4">
+      <select name="specialty" class="form-select" onchange="this.form.submit()">
+        <option value="">همه تخصص‌ها</option>
+        {% for s in specialties %}
+          <option value="{{ s.id }}" {% if selected_specialty == s.id|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+        {% endfor %}
+      </select>
     </div>
+  </form>
+</div>
 
-    <button type="submit">جستجو</button>
-
-</form>
-
-
-<hr>
-
-
-{% if doctors %}
-
-    <h2>پزشکان</h2>
-
-    {% for doctor in doctors %}
-
+<div class="row g-3">
+  {% for doctor in doctors %}
+  <div class="col-md-6 col-lg-4">
+    <div class="card p-3 h-100">
+      <div class="d-flex align-items-center gap-3 mb-2">
+        {% if doctor.profile.avatar %}
+          <img src="{{ doctor.profile.avatar.url }}" class="doctor-avatar">
+        {% else %}
+          <div class="doctor-avatar d-flex align-items-center justify-content-center">
+            <i class="bi bi-person fs-3 text-secondary"></i>
+          </div>
+        {% endif %}
         <div>
-            <h3>{{ doctor.profile.full_name }}</h3>
-
-            <p>
-                تخصص:
-                {{ doctor.specialty.name }}
-            </p>
-
-            {% if doctor.bio %}
-                <p>
-                    {{ doctor.bio }}
-                </p>
-            {% endif %}
-
-            <p>
-                هزینه ویزیت:
-                {{ doctor.consultation_fee }}
-            </p>
-
-            {% if doctor.is_active %}
-                <p>وضعیت: فعال</p>
-            {% endif %}
+          <h6 class="mb-0">دکتر {{ doctor.profile.full_name }}</h6>
+          <small class="text-muted">{{ doctor.specialty.name|default:"—" }}</small>
         </div>
-
-        <hr>
-
-    {% endfor %}
-
-{% else %}
-
-    <p>پزشکی با این مشخصات پیدا نشد.</p>
-
-{% endif %}
-
+      </div>
+      <p class="text-truncate text-muted small mb-2">{{ doctor.bio|default:"بدون توضیحات" }}</p>
+      <div class="d-flex justify-content-between align-items-center">
+        <span class="rating-badge"><i class="bi bi-star-fill"></i> {{ doctor.average_rating }} ({{ doctor.review_count }})</span>
+        <span class="fw-bold">{{ doctor.consultation_fee }} تومان</span>
+      </div>
+      <a href="{% url 'doctors:detail' doctor.pk %}" class="btn btn-primary mt-3">مشاهده و رزرو نوبت</a>
+    </div>
+  </div>
+  {% empty %}
+  <p class="text-muted text-center">پزشکی یافت نشد.</p>
+  {% endfor %}
+</div>
 {% endblock %}
