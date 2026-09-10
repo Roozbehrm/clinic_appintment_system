@@ -21,7 +21,7 @@ class PhoneOnlyForm(forms.Form):
             raise forms.ValidationError ( 'شماره موبایل باید ۱۱ رقم باشد.')
 
 
-        if not phone.startwith('09'):
+        if not phone.startswith('09'):
             raise forms.ValidationError ( 'شماره موبایل معتبر نیست.')
 
         return phone
