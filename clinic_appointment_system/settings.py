@@ -38,11 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.sites'
+    'django.contrib.sites',
     'allauth',
-    'allauth.accounts',
+    'allauth.account',
     'allauth.socialaccount',
-    'allauth.socialacount.providers.google',
+    'allauth.socialaccount.providers.google',
     'accounts',
     'appointments',
     'doctors',
@@ -124,8 +124,8 @@ SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APPS': [
             {
-                'client_id': config('GOOGLE_CLIENT_ID'),
-                'secret': config('GOOGLE_CLIENT_SECRET'),
+                "client_id": config("GOOGLE_CLIENT_ID", default=""),
+                "secret": config("GOOGLE_CLIENT_SECRET", default=""),
                 'key': '',
             }
         ]
