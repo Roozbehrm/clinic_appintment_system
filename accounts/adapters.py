@@ -1,12 +1,12 @@
 
 import uuid
-from allauth.socialaccount.adapter import DefaulSocialAccountAdapter
+from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from accounts.models import Profile
 from patients.models import Patient
 from payments.models import Wallet 
 from doctors.models import Doctor  
 
-class CustomSocialAccountAdapter(DefaulSocialAccountAdapter):
+class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
 
     def populate_user(self,request,sociallogin,data):
 
