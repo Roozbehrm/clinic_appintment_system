@@ -11,6 +11,8 @@ from .forms import DoctorProfileForm, DoctorSearchForm, WorkingHourForm
 from .mixin import DoctorRequiredMixin
 from .models import Doctor, Specialty, TimeSlot, WorkingHour
 from .services import generate_time_slots
+from appointments.models import Appointment 
+from appointments.services import complete_appointment 
 
 
 class DoctorLoginView(View):
@@ -425,7 +427,29 @@ class ManageSlotsView(LoginRequiredMixin, View):
 
 
 class CompleteAppointmentView(LoginRequiredMixin, View):
-    pass
+
+    def post(self,request,pk):
+
+        doctor = request.user.profile.doctor
+        
+        appointment = get_object_or_404(
+            Appointment,
+
+            pk=pk,
+
+            time_slot__doctor = doctor 
+        )
+
+        try:
+            complete_appointment(appointment)
+            
+        except ValidationError as e:
+            messages.error(
+                request,
+                f'تکمیل نوبت انجام نشد: {e}'
+                )
+
+        return redirect('doctors:dashboard')
 
 
 
@@ -472,3 +496,8 @@ class HomeView(View):
         return render(request, "doctors/home.html", {
             "top_doctors": top_doctors, "specialties": specialties,
         })
+
+
+
+        
+

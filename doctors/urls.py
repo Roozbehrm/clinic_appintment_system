@@ -51,9 +51,9 @@ urlpatterns = [
         views.ManageSlotsView.as_view(),
         name="manage_slots",
     ),
-    # path(
-    #     "dashboard/appointments/<int:pk>/complete/",
-    #     views.CompleteAppointmentView.as_view(),
-    #     name="complete_appointment",
-    # ),
+    path(
+         "dashboard/appointments/<int:pk>/complete/",
+         views.CompleteAppointmentView.as_view(),
+         name="complete_appointment",
+    ),
 ]
