@@ -10,25 +10,29 @@ from .managers import UserManager
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    phone_number = models.CharField(verbose_name="شماره تلفن", max_length=15, unique=True)
-    email = models.EmailField(verbose_name="ایمیل", unique=True)
-    is_verified = models.BooleanField(verbose_name="تایید شده", default=False)
-    is_staff = models.BooleanField(verbose_name="کارمند", default=False)
-    is_active = models.BooleanField(verbose_name="فعال", default=True)
-    date_joined = models.DateTimeField(verbose_name="تاریخ عضویت", auto_now_add=True)
+    phone_number = models.CharField(
+        "شماره تلفن", max_length=15, unique=True, null=True, blank=True,
+        help_text="برای کاربرانی که فقط با گوگل وارد شده‌اند خالی می‌ماند.",
+    )
+    email = models.EmailField("ایمیل", unique=True)
+    is_verified = models.BooleanField("تایید شده", default=False)
+    is_staff = models.BooleanField("کارمند", default=False)
+    is_active = models.BooleanField("فعال", default=True)
+    date_joined = models.DateTimeField("تاریخ عضویت", auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     objects = UserManager()
 
-    USERNAME_FIELD = "phone_number"
-    REQUIRED_FIELDS = ["email"]
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
 
     class Meta:
         verbose_name = "کاربر"
         verbose_name_plural = "کاربران"
 
     def __str__(self):
-        return self.phone_number
+
+        return self.phone_number or self.email or f"user #{self.pk}"
 
     @property
     def is_doctor(self):
@@ -69,18 +73,19 @@ class OTP(models.Model):
         return (not self.is_used) and timezone.now() <= self.expires_at
 
     def __str__(self):
-        return f"{self.user.phone_number} - {self.code}"
+        identity = self.user.phone_number or self.user.email or f"user #{self.user_id}"
+        return f"{identity} - {self.code}"
 
 
 class Profile(models.Model):
     GENDER_CHOICES = [("male", "مرد"), ("female", "زن")]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    full_name = models.CharField(verbose_name="نام و نام خانوادگی", max_length=150, blank=True)
-    avatar = models.ImageField(verbose_name="آواتار", upload_to="avatars/", blank=True, null=True)
-    national_code = models.CharField(verbose_name="کد ملی", max_length=10, blank=True)
-    gender = models.CharField(verbose_name="جنسیت", max_length=10, choices=GENDER_CHOICES, blank=True)
-    address = models.CharField(verbose_name="آدرس", max_length=255, blank=True)
+    full_name = models.CharField("نام و نام خانوادگی", max_length=150, blank=True)
+    avatar = models.ImageField("آواتار", upload_to="avatars/", blank=True, null=True)
+    national_code = models.CharField("کد ملی", max_length=10, blank=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, blank=True)
+    address = models.CharField("آدرس", max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -89,4 +94,4 @@ class Profile(models.Model):
         verbose_name_plural = "پروفایل‌ها"
 
     def __str__(self):
-        return self.full_name or self.user.phone_number
+        return self.full_name or self.user.phone_number or self.user.email or f"profile #{self.pk}"
