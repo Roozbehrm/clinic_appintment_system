@@ -1,10 +1,6 @@
-"""
-تنظیمات مشترک بین محیط توسعه (dev) و پروداکشن (production).
-هیچ‌وقت مستقیم استفاده نمی‌شود — همیشه از طریق dev.py یا production.py
-ایمپورت می‌شود (`from .base import *`).
-"""
+
 from pathlib import Path
-from decouple import config
+from decouple import config, Csv
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -74,23 +70,16 @@ AUTHENTICATION_BACKENDS = [
 
 SITE_ID = 1
 
-# صفحه‌ی خطای CSRF هم هم‌شکل با بقیه‌ی صفحات خطا (400/403/404/500) باشد.
-CSRF_FAILURE_VIEW = "config.views.csrf_failure_view"
+# google login/registration via django-allauth
+ACCOUNT_EMAIL_VERIFICATION = "none"
 
-# --- تنظیمات django-allauth (ورود با گوگل) ---
-# مدل User ما اصلاً فیلدی به اسم username ندارد (نه فقط این‌که پر کردنش
-# اختیاریه) — بدون این خط، allauth روی save_user سعی می‌کند برای کاربر
-# یک username یکتا بسازد و چون چنین فیلدی روی مدل نیست با
-# FieldDoesNotExist کرش می‌کند. ACCOUNT_USERNAME_REQUIRED=False به‌تنهایی
-# این مشکل را حل نمی‌کند، چون فقط اجباری بودنش را در فرم لغو می‌کند.
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
+ACCOUNT_UNIQUE_EMAIL = True
+
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
-ACCOUNT_EMAIL_VERIFICATION = "none"
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_AUTHENTICATION_METHOD = "email"
-SOCIALACCOUNT_LOGIN_ON_GET = True  # مستقیم به صفحه ورود گوگل برو، بدون صفحه واسط
+SOCIALACCOUNT_LOGIN_ON_GET = True  
 SOCIALACCOUNT_ADAPTER = "accounts.adapters.CustomSocialAccountAdapter"
 SOCIALACCOUNT_QUERY_EMAIL = True
 SOCIALACCOUNT_PROVIDERS = {
@@ -121,16 +110,6 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# توجه: نسخه‌ی «Manifest» (هش‌دار/cache-busting) فقط در production.py ست
-# می‌شود، نه اینجا. آن نسخه هر بار به فایل staticfiles.json (خروجی
-# collectstatic) نیاز دارد و اگر پیدا نشود، هر صفحه‌ای که از تگ
-# {% static %} استفاده کند (که در base.html هست) با ValueError/500 کرش
-# می‌کند. چون dev.py و test.py هیچ‌کدام collectstatic اجرا نمی‌کنند (و
-# نباید هم اجرا کنند)، از نسخه‌ی ساده و بدون‌منیفست استفاده می‌کنیم که در
-# هر حالتی (collectstatic اجرا شده باشد یا نه) کار می‌کند.
-#
-# از STORAGES (روش جدید و توصیه‌شده‌ی جنگو ۴٫۲+) استفاده می‌کنیم، نه
-# STATICFILES_STORAGE قدیمی، که در جنگو ۵٫۱+ منسوخ شده است.
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -145,7 +124,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-LOGIN_URL = "accounts:login"
+LOGIN_URL = "accounts:otp_login"
 LOGIN_REDIRECT_URL = "accounts:redirect_after_login"
 LOGOUT_REDIRECT_URL = "accounts:login"
 
@@ -156,8 +135,6 @@ CELERY_TASK_SERIALIZER = "json"
 
 OTP_EXPIRY_MINUTES = 5
 
-# مقادیر SMS_API_KEY/SMS_SENDER_LINE مشترکند؛ خودِ SMS_BACKEND (که مشخص می‌کند
-# کدام بک‌اند فعال است) در dev.py و production.py جدا تعریف می‌شود چون
-# پیش‌فرضش بین دو محیط فرق دارد.
+
 SMS_API_KEY = config("SMS_API_KEY", default="")
 SMS_SENDER_LINE = config("SMS_SENDER_LINE", default="")
