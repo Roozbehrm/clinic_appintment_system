@@ -1,33 +1,37 @@
 from django.db import models
+from patients.models import Patient
+
 
 class Wallet(models.Model):
-    patient_id = models.OneToOneField(to='patients.Patient' , related_name = 'wallet', on_delete=models.CASCADE, null =False)
-    balance = models.DecimalField(max_digits=12, decimal_places=0, default=0,
-                                  verbose_name = 'موجودی'
-                                  )
-    created_at = models.DateTimeField(auto_now_add = True)
-    updated_at = models.DateTimeField(auto_now = True)
-    
+    patient = models.OneToOneField(Patient, on_delete=models.CASCADE, related_name="wallet")
+    balance = models.DecimalField("موجودی", max_digits=12, decimal_places=0, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-    def __repr__ (self):
-        return f'Wallet balance for patient: {self.patient_id} is: {self.balance}'
+    class Meta:
+        verbose_name = "کیف پول"
+        verbose_name_plural = "کیف‌های پول"
+
+    def __str__(self):
+        return f"کیف پول {self.patient}"
+
 
 class Transaction(models.Model):
-    STATUS_CHOICES = [('success','success'), ('failed','failed'), ('pending','pending'),]
-    TYPE_CHOICES = [('deposit','deposit'),('payment','payment'),('refund','refund'),]
-    wallet_id = models.ForeignKey(to='payments.Wallet', related_name='transaction', on_delete=models.CASCADE, null =False)
-    appointment_id = models.ForeignKey(to='appointments.Appointment', related_name='transaction', on_delete=models.CASCADE, null = True, blank = True)
-    amount = models.DecimalField(max_digits=12, decimal_places=0,
-                                  verbose_name ='مقدار')
-    type = models.CharField(choices = TYPE_CHOICES,  max_length = 50,
-                            verbose_name ='نوع')
-    status = models.CharField(choices = STATUS_CHOICES, max_length=15,
-                               verbose_name ='وضعیت'
-                               )
-    created_at = models.DateTimeField(auto_now_add = True)
-   
+    TYPE_CHOICES = [("deposit", "واریز"), ("payment", "پرداخت"), ("refund", "بازگشت وجه")]
+    STATUS_CHOICES = [("pending", "در انتظار"), ("success", "موفق"), ("failed", "ناموفق")]
 
-    def __repr__(self):
-        return f'appointment:{self.appointment_id} /n status:{self.status}'
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name="transactions", verbose_name="کیف پول")
+    appointment = models.ForeignKey("appointments.Appointment", on_delete=models.SET_NULL,
+null=True, blank=True, related_name="transactions", verbose_name="نوبت")
+    amount = models.DecimalField( max_digits=12, decimal_places=0, verbose_name="مبلغ")
+    type = models.CharField(max_length=10, choices=TYPE_CHOICES, verbose_name="نوع")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="success", verbose_name="وضعیت")
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = "تراکنش"
+        verbose_name_plural = "تراکنش‌ها"
+        ordering = ["-created_at"]
 
+    def __str__(self):
+        return f"{self.get_type_display()} - {self.amount} - {self.wallet.patient}"

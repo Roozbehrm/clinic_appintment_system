@@ -1,54 +1,33 @@
-from django.shortcuts import render
-from django.views.generic import TemplateView , FormView
-from payments.models import Transaction, Wallet
-from payments.forms import WalletTopUpForm 
-from django.urls import reverse_lazy 
-from payments.services import deposit
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render, redirect
+from django.views import View
 
-class WalletDetailView(TemplateView):
-    
-    template_name = 'payments/templates/wallet_detail.html'
-    
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        # فرم افزایش موجودی
-        context['form'] = WalletTopUpForm()
-
-        # پیدا کردن کیف پول فرد لاگین شده
-        wallet = Wallet.objects.get(
-            patient_id__profile_id__user=self.request.user
-        )
-        context['wallet'] = wallet
-
-        # تاریخچه ی تراکنش: 
-        context['transactions'] = Transaction.objects.filter(wallet_id=wallet.id).order_by('-created_at')
-
-        return context 
+from .forms import DepositForm
+from .services import deposit
 
 
+class WalletDetailView(LoginRequiredMixin, View):
+    login_url = "accounts:login"
 
-class WalletDepositView(FormView):
-    
-    form_class = WalletTopUpForm
-
-    def form_valid(self,form):
-        
-        amount = form.cleaned_data['amount']
-        wallet = Wallet.objects.get(
-           patient_id__profile_id__user_id = self.request.user.id
-            )
-        
-        deposit (wallet,amount)
-
-        self.success_url = reverse_lazy(
-            'payments:wallet_detail'
-            
-            )
-
-        return super().form_valid(form)
+    def get(self, request):
+        wallet = request.user.profile.patient.wallet
+        transactions = wallet.transactions.all()[:30]
+        form = DepositForm()
+        return render(request, "payments/wallet.html", {
+            "wallet": wallet, "transactions": transactions, "form": form,
+        })
 
 
+class WalletDepositView(LoginRequiredMixin, View):
+    login_url = "accounts:login"
 
-
+    def post(self, request):
+        wallet = request.user.profile.patient.wallet
+        form = DepositForm(request.POST)
+        if form.is_valid():
+            # اینجا محل اتصال به درگاه واقعی پرداخت است (زرین‌پال و ...).
+            # فعلاً به‌صورت شبیه‌سازی‌شده، مستقیم شارژ می‌شود.
+            deposit(wallet, form.cleaned_data["amount"])
+            messages.success(request, "کیف پول با موفقیت شارژ شد.")
+        return redirect("payments:wallet_detail")

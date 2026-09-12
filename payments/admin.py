@@ -1,13 +1,13 @@
 from django.contrib import admin
-from payments import models
+from .models import Wallet, Transaction
 
-@admin.register(models.Wallet)
+
+@admin.register(Wallet)
 class WalletAdmin(admin.ModelAdmin):
-    list_display = ('id', 'patient_id', 'balance', 'created_at', 'updated_at')
-    
+    list_display = ["patient", "balance"]
 
-@admin.register(models.Transaction)
+
+@admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'wallet_id', 'appointment_id', 'amount', 'type', 'status', 'created_at')
-
-
+    list_display = ["wallet", "type", "amount", "status", "created_at"]
+    list_filter = ["type", "status"]
