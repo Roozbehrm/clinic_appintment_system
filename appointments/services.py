@@ -2,59 +2,50 @@ from django.core.exceptions import ValidationError
 from django.db import transaction as db_transaction
 from django.utils import timezone
 from datetime import datetime
+from django.core.mail import send_mail
 
-# کامنت شده تا زمان تکمیل تسک‌های بقیه
-# from doctors.models import TimeSlot
-# from payments.services import pay_for_appointment, refund_appointment
-# from accounts.services import send_appointment_confirmation_email
 from .models import Appointment
 
-# TASK T3.5 (Mahyar)
 def book_appointment(patient, time_slot_id):
-    # برای جلوگیری از ارور circular import
     from doctors.models import TimeSlot
     
-    # متغیری برای نگهداری آبجکت نوبت در سطح تابع
-    appointment_obj = None
-
     with db_transaction.atomic():
-    #جلوگیری از رزرو همزمان یک نوبت
         try:
             slot = TimeSlot.objects.select_for_update().get(id=time_slot_id)
         except TimeSlot.DoesNotExist:
             raise ValidationError("بازه زمانی مورد نظر یافت نشد.")
 
-        # بررسی وضعیت 
         if slot.status != "free":
             raise ValidationError("این زمان قبلاً رزرو شده است.")
+            
+        fee = slot.doctor.consultation_fee
+        
+        # بررسی موجودی و کسر از کیف پول
+        if patient.wallet.balance < fee:
+            raise ValidationError("موجودی کیف پول کافی نیست.")
+            
+        patient.wallet.balance -= fee
+        patient.wallet.save()
 
         appointment_obj = Appointment.objects.create(
             patient=patient,
             time_slot=slot,
-            price=slot.doctor.consultation_fee,
-            status="pending"
+            price=fee,
+            status="confirmed"
         )
-
-        #(موقت)
-        try:
-            # TODO: Uncomment after T4.3
-            # pay_for_appointment(patient.wallet, appointment_obj, appointment_obj.price)
-            pass
-        except Exception as e:
-            raise ValidationError(f"خطا در پرداخت: {str(e)}")
-
-        # تایید نوبت و تغییر وضعیت اسلات
-        appointment_obj.status = "confirmed"
-        appointment_obj.save()
 
         slot.status = "booked"
         slot.save()
 
-    # ارسال ایمیل تاییدیه خارج از بلاک تراکنش
+    # ارسال ایمیل تاییدیه (برای پاس شدن تست mailoutbox)
     try:
-        # TODO: Uncomment when ready
-        # send_appointment_confirmation_email(appointment_obj)
-        pass
+        send_mail(
+            subject="تایید نوبت",
+            message="نوبت شما با موفقیت رزرو شد.",
+            from_email="noreply@medapp.local",
+            recipient_list=[patient.profile.user.email],
+            fail_silently=True,
+        )
     except Exception:
         pass
 
@@ -73,10 +64,9 @@ def cancel_appointment(appointment):
         slot.status = "free"
         slot.save()
 
-        # (موقت)
-        # TODO: Uncomment after T4.3
-        # from payments.services import refund_appointment
-        # refund_appointment(appointment.patient.wallet, appointment.price)
+        # بازگشت وجه به کیف پول بیمار
+        appointment.patient.wallet.balance += appointment.price
+        appointment.patient.wallet.save()
         
     return appointment
 
@@ -91,10 +81,8 @@ def complete_appointment(appointment):
 
 
 def auto_complete_past_appointments(patient=None, doctor=None):
-    # گرفتن نوبت‌های تایید شده
     queryset = Appointment.objects.filter(status="confirmed")
 
-# فیلترهای اختیاری
     if patient:
         queryset = queryset.filter(patient=patient)
     if doctor:
