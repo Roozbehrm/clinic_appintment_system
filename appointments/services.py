@@ -1,62 +1,44 @@
 from django.core.exceptions import ValidationError
 from django.db import transaction as db_transaction
-from django.utils import timezone
-from datetime import datetime
-from django.core.mail import send_mail
+
+from doctors.models import TimeSlot
+from payments.services import pay_for_appointment
+from accounts.services import send_appointment_confirmation_email
 
 from .models import Appointment
 
+
 def book_appointment(patient, time_slot_id):
-    from doctors.models import TimeSlot
-    
     with db_transaction.atomic():
-        try:
-            slot = TimeSlot.objects.select_for_update().get(id=time_slot_id)
-        except TimeSlot.DoesNotExist:
-            raise ValidationError("بازه زمانی مورد نظر یافت نشد.")
-
+        slot = TimeSlot.objects.select_for_update().get(pk=time_slot_id)
         if slot.status != "free":
-            raise ValidationError("این زمان قبلاً رزرو شده است.")
-            
-        fee = slot.doctor.consultation_fee
-        
-        # بررسی موجودی و کسر از کیف پول
-        if patient.wallet.balance < fee:
-            raise ValidationError("موجودی کیف پول کافی نیست.")
-            
-        patient.wallet.balance -= fee
-        patient.wallet.save()
+            raise ValidationError("این نوبت دیگر خالی نیست.")
 
-        appointment_obj = Appointment.objects.create(
-            patient=patient,
-            time_slot=slot,
-            price=fee,
-            status="confirmed"
+        doctor = slot.doctor
+        price = doctor.consultation_fee
+
+        appointment = Appointment.objects.create(
+            patient=patient, time_slot=slot, price=price, status="pending",
         )
+
+        wallet = patient.wallet
+        pay_for_appointment(wallet, appointment, price)
+
+        appointment.status = "confirmed"
+        appointment.save()
 
         slot.status = "booked"
         slot.save()
 
-    # ارسال ایمیل تاییدیه (برای پاس شدن تست mailoutbox)
-    try:
-        send_mail(
-            subject="تایید نوبت",
-            message="نوبت شما با موفقیت رزرو شد.",
-            from_email="noreply@medapp.local",
-            recipient_list=[patient.profile.user.email],
-            fail_silently=True,
-        )
-    except Exception:
-        pass
-
-    return appointment_obj
+    send_appointment_confirmation_email(appointment)
+    return appointment
 
 
 def cancel_appointment(appointment):
-    if appointment.status not in ["pending", "confirmed"]:
-        raise ValidationError("این نوبت قابل لغو نیست.")
-
+    from payments.services import refund_appointment
     with db_transaction.atomic():
+        if appointment.status not in ("pending", "confirmed"):
+            raise ValidationError("این نوبت قابل لغو نیست.")
         appointment.status = "cancelled"
         appointment.save()
 
@@ -64,43 +46,38 @@ def cancel_appointment(appointment):
         slot.status = "free"
         slot.save()
 
-        # بازگشت وجه به کیف پول بیمار
-        appointment.patient.wallet.balance += appointment.price
-        appointment.patient.wallet.save()
-        
+        refund_appointment(appointment.patient.wallet, appointment, appointment.price)
     return appointment
 
 
 def complete_appointment(appointment):
     if appointment.status != "confirmed":
-        raise ValidationError("فقط نوبت‌های تایید شده قابل تکمیل هستند.")
-
+        raise ValidationError("فقط نوبت تاییدشده قابل تکمیل است.")
     appointment.status = "completed"
     appointment.save()
     return appointment
 
 
 def auto_complete_past_appointments(patient=None, doctor=None):
-    queryset = Appointment.objects.filter(status="confirmed")
+    """
+    نوبت‌های تاییدشده‌ای که زمان ویزیت آن‌ها گذشته را به‌صورت خودکار
+    'انجام‌شده' علامت می‌زند تا امکان ثبت نظر برای بیمار فراهم شود.
+    """
+    from django.utils import timezone
+    from datetime import datetime
 
-    if patient:
-        queryset = queryset.filter(patient=patient)
-    if doctor:
-        queryset = queryset.filter(time_slot__doctor=doctor)
-
-    completed_count = 0
     now = timezone.now()
 
-    for appointment in queryset:
-        slot = appointment.time_slot
-        
-        visit_end_datetime = timezone.make_aware(
-            datetime.combine(slot.visit_date, slot.end_time)
-        )
+    qs = Appointment.objects.filter(status="confirmed")
+    if patient is not None:
+        qs = qs.filter(patient=patient)
+    if doctor is not None:
+        qs = qs.filter(time_slot__doctor=doctor)
 
-        if visit_end_datetime < now:
+    for appointment in qs.select_related("time_slot"):
+        slot = appointment.time_slot
+        naive_end = datetime.combine(slot.visit_date, slot.end_time)
+        visit_end = timezone.make_aware(naive_end) if timezone.is_naive(naive_end) else naive_end
+        if visit_end < now:
             appointment.status = "completed"
             appointment.save()
-            completed_count += 1
-
-    return completed_count
