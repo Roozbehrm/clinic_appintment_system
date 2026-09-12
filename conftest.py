@@ -47,7 +47,7 @@ def doctor_user(db, specialty):
     doctor = Doctor.objects.create(
         profile=profile,
         specialty=specialty,
-        mcc="123456",
+        # خط mcc کلاً حذف شد
         consultation_fee=200000,
         is_active=True,
     )
@@ -67,7 +67,7 @@ def patient_user(db):
 
     profile = Profile.objects.create(user=user, full_name="بیمار تست")
     patient = Patient.objects.create(profile=profile)
-    Wallet.objects.create(patient=patient, balance=1000000)
+    Wallet.objects.create(patient_id=patient, balance=1000000)
     return patient
 
 

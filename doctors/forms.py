@@ -84,7 +84,7 @@ class DoctorCreationForm(forms.ModelForm):
 
     class Meta:
         model = Doctor
-        fields = ["mcc", "specialty", "bio", "consultation_fee", "is_active"]
+        fields = ["specialty", "bio", "consultation_fee", "is_active"]
 
     def clean_phone_number(self):
         phone = self.cleaned_data["phone_number"]
