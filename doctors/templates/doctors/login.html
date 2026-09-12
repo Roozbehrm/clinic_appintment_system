@@ -21,6 +21,9 @@
         </div>
         <button class="btn btn-primary w-100" type="submit">ورود</button>
       </form>
+      <p class="text-center mt-3 mb-0">
+        <a href="{% url 'doctors:otp_login' %}">ورود با کد یکبار مصرف (بدون رمز عبور)</a>
+      </p>
       <hr>
       <p class="text-center small text-muted mb-0">بیمار هستید؟ <a href="{% url 'accounts:login' %}">ورود کاربران از اینجا</a></p>
     </div>

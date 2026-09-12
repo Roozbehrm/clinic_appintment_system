@@ -37,7 +37,8 @@
     <div class="card p-3 h-100">
       <div class="d-flex align-items-center gap-3 mb-2">
         {% if doctor.profile.avatar %}
-          <img src="{{ doctor.profile.avatar.url }}" class="doctor-avatar">
+          <img src="{{ doctor.profile.avatar.url }}" class="doctor-avatar"
+               style="object-position: {{ doctor.profile.avatar_pos_x }}% {{ doctor.profile.avatar_pos_y }}%;">
         {% else %}
           <div class="doctor-avatar d-flex align-items-center justify-content-center">
             <i class="bi bi-person fs-3 text-secondary"></i>

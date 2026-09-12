@@ -20,7 +20,6 @@ class WorkingHourForm(forms.ModelForm):
         }
 
     def __init__(self, *args, doctor=None, **kwargs):
-
         self.doctor = doctor
         super().__init__(*args, **kwargs)
 
@@ -66,14 +65,7 @@ class DoctorSearchForm(forms.Form):
 
 
 class DoctorCreationForm(forms.ModelForm):
-    """
-    فرم افزودن پزشک جدید، مخصوص پنل ادمین (کارمند).
 
-    قبلاً کارمند برای ساختن یک پزشک باید ۳ مرحله‌ی جدا طی می‌کرد (کاربر
-    در accounts › Users، بعد پروفایل، بعد پزشک) — که چون کاربرها با
-    شماره تلفن لیست می‌شدند، پیدا کردن رکورد درست گیج‌کننده بود. این
-    فرم هر سه مرحله (User + Profile + Doctor) را در یک صفحه انجام می‌دهد.
-    """
     phone_number = forms.CharField(label="شماره تلفن پزشک", validators=[phone_validator])
     email = forms.EmailField(label="ایمیل پزشک")
     full_name = forms.CharField(label="نام و نام خانوادگی پزشک")
@@ -84,7 +76,7 @@ class DoctorCreationForm(forms.ModelForm):
 
     class Meta:
         model = Doctor
-        fields = ["specialty", "bio", "consultation_fee", "is_active"]
+        fields = ["mcc", "specialty", "bio", "consultation_fee", "is_active"]
 
     def clean_phone_number(self):
         phone = self.cleaned_data["phone_number"]
@@ -101,7 +93,8 @@ class DoctorCreationForm(forms.ModelForm):
     def save(self, commit=True):
         doctor = super().save(commit=False)
 
-        password = self.cleaned_data["password"] or get_random_string(10)
+        entered_password = self.cleaned_data["password"]
+        password = entered_password or get_random_string(10)
         user = User.objects.create_user(
             phone_number=self.cleaned_data["phone_number"],
             email=self.cleaned_data["email"],
@@ -113,7 +106,7 @@ class DoctorCreationForm(forms.ModelForm):
 
         send_new_account_credentials(user, password)
 
-        self.generated_password = password
+        self.generated_password = None if entered_password else password
 
         if commit:
             doctor.save()

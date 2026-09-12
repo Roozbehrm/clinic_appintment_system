@@ -1,46 +1,35 @@
 {% extends "base.html" %}
-
+{% block title %}تنظیمات پزشک{% endblock %}
 {% block content %}
-
-<h1>تنظیمات پروفایل پزشک</h1>
-
-<p>
-    پزشک:
-    {{ doctor.profile.full_name }}
-</p>
-
-<form method="post">
-    {% csrf_token %}
-
-    {{ form.non_field_errors }}
-
-    <div>
-        {{ form.specialty.label_tag }}
-        {{ form.specialty }}
-        {{ form.specialty.errors }}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card p-4">
+      <h5 class="mb-3">تنظیمات حرفه‌ای</h5>
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">تخصص</label>
+          {{ form.specialty }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">بیوگرافی</label>
+          {{ form.bio }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">هزینه ویزیت (تومان)</label>
+          {{ form.consultation_fee }}
+        </div>
+        <div class="form-check mb-3">
+          {{ form.is_active }}
+          <label class="form-check-label">فعال (قابل نمایش در جستجو)</label>
+        </div>
+        <button class="btn btn-primary" type="submit">ذخیره</button>
+      </form>
+      <hr>
+      <div class="text-center">
+        <a href="{% url 'accounts:complete_profile' %}">ویرایش نام و تصویر پروفایل</a>
+      </div>
     </div>
-
-    <div>
-        {{ form.bio.label_tag }}
-        {{ form.bio }}
-        {{ form.bio.errors }}
-    </div>
-
-    <div>
-        {{ form.consultation_fee.label_tag }}
-        {{ form.consultation_fee }}
-        {{ form.consultation_fee.errors }}
-    </div>
-
-    <div>
-        {{ form.is_active.label_tag }}
-        {{ form.is_active }}
-        {{ form.is_active.errors }}
-    </div>
-
-    <button type="submit">
-        ذخیره تغییرات
-    </button>
-</form>
-
+  </div>
+</div>
 {% endblock %}

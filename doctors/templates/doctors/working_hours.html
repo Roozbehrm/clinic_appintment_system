@@ -72,6 +72,7 @@
     <div class="card p-4 mt-3">
       <h5 class="mb-3">نوبت‌های خالی ساخته‌شده <span class="text-muted small">(۱۴ روز آینده)</span></h5>
       {% if slots_by_date %}
+        <p class="text-muted small mb-2">روی نوبت‌های سبز (خالی) کلیک کنید تا حذف بشن؛ نوبت‌های آبی رزرو شده‌اند و قابل حذف نیستند.</p>
         <ul class="nav nav-pills mb-3 flex-wrap">
           {% for date, slots in slots_by_date.items %}
             <li class="nav-item">
@@ -86,9 +87,20 @@
             <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="wh-d{{ forloop.counter }}">
               <div class="d-flex flex-wrap gap-2">
                 {% for slot in slots %}
-                  <span class="badge {% if slot.status == 'free' %}bg-success{% elif slot.status == 'booked' %}bg-primary{% else %}bg-secondary{% endif %} p-2">
-                    {{ slot.start_time }} - {{ slot.end_time }}
-                  </span>
+                  {% if slot.status == 'free' %}
+                    <form method="post" action="{% url 'doctors:delete_time_slot' slot.pk %}"
+                          onsubmit="return confirm('این نوبت خالی حذف شود؟');" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="badge bg-success p-2 border-0" title="حذف این نوبت خالی">
+                        {{ slot.start_time }} - {{ slot.end_time }} <i class="bi bi-x-circle ms-1"></i>
+                      </button>
+                    </form>
+                  {% else %}
+                    <span class="badge {% if slot.status == 'booked' %}bg-primary{% else %}bg-secondary{% endif %} p-2"
+                          title="{% if slot.status == 'booked' %}رزروشده - قابل حذف نیست{% else %}{{ slot.get_status_display }}{% endif %}">
+                      {{ slot.start_time }} - {{ slot.end_time }}
+                    </span>
+                  {% endif %}
                 {% endfor %}
               </div>
             </div>

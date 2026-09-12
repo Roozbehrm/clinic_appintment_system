@@ -1,56 +1,38 @@
 from datetime import datetime, timedelta
 
-from django.utils import timezone
-
 from .models import TimeSlot, PY_WEEKDAY_TO_OUR
 
 
 def generate_time_slots(doctor, days_ahead=14):
-
+  
+    today = datetime.now().date()
     created_count = 0
+    working_hours = doctor.working_hours.all()
 
-    today = timezone.localdate()
+    for i in range(days_ahead):
+        day = today + timedelta(days=i)
+        our_weekday = PY_WEEKDAY_TO_OUR[day.weekday()]
+        day_working_hours = [wh for wh in working_hours if wh.day_of_week == our_weekday]
 
-    for day_offset in range(days_ahead + 1):
-        visit_date = today + timedelta(days=day_offset)
+        for wh in day_working_hours:
+            cursor = datetime.combine(day, wh.start_time)
+            end = datetime.combine(day, wh.end_time)
+            step = timedelta(minutes=wh.slot_duration_minutes)
 
-        our_weekday = PY_WEEKDAY_TO_OUR[visit_date.weekday()]
-
-        working_hours = doctor.working_hours.filter(day_of_week=our_weekday)
-
-        for working_hour in working_hours:
-
-            current_datetime = datetime.combine(
-                visit_date,
-                working_hour.start_time,
-            )
-
-            end_datetime = datetime.combine(
-                visit_date,
-                working_hour.end_time,
-            )
-
-            duration = timedelta(minutes=working_hour.slot_duration_minutes)
-
-            while current_datetime + duration <= end_datetime:
-
-                start_time = current_datetime.time()
-                end_time = (current_datetime + duration).time()
-
-                _, created = TimeSlot.objects.get_or_create(
+            while cursor + step <= end:
+                slot_end = cursor + step
+                _, is_new = TimeSlot.objects.get_or_create(
                     doctor=doctor,
-                    visit_date=visit_date,
-                    start_time=start_time,
+                    visit_date=day,
+                    start_time=cursor.time(),
                     defaults={
-                        "end_time": end_time,
-                        "working_hours": working_hour,
-                        "status": TimeSlot.STATUS_FREE,
+                        "working_hours": wh,
+                        "end_time": slot_end.time(),
+                        "status": "free",
                     },
                 )
-
-                if created:
+                if is_new:
                     created_count += 1
-
-                current_datetime += duration
+                cursor = slot_end
 
     return created_count

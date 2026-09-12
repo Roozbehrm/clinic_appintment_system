@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}دکتر {{ doctor.profile.full_name }}{% endblock %}
+{% block content %}
+<div class="card p-4 mb-4">
+  <div class="d-flex align-items-center gap-3">
+    {% if doctor.profile.avatar %}
+      <img src="{{ doctor.profile.avatar.url }}" class="doctor-avatar"
+           style="width:96px;height:96px; object-position: {{ doctor.profile.avatar_pos_x }}% {{ doctor.profile.avatar_pos_y }}%;">
+    {% else %}
+      <div class="doctor-avatar d-flex align-items-center justify-content-center" style="width:96px;height:96px;">
+        <i class="bi bi-person fs-1 text-secondary"></i>
+      </div>
+    {% endif %}
+    <div>
+      <h4 class="mb-1">دکتر {{ doctor.profile.full_name }}</h4>
+      <p class="text-muted mb-1">{{ doctor.specialty.name|default:"—" }}</p>
+      <p class="text-muted small mb-1">شماره نظام پزشکی: <span dir="ltr">{{ doctor.mcc }}</span></p>
+      <span class="rating-badge"><i class="bi bi-star-fill"></i> {{ doctor.average_rating }} از {{ doctor.review_count }} نظر</span>
+      <span class="fw-bold ms-3">هزینه ویزیت: {{ doctor.consultation_fee }} تومان</span>
+    </div>
+  </div>
+  {% if doctor.bio %}<p class="mt-3">{{ doctor.bio }}</p>{% endif %}
+</div>
+
+<div class="card p-4 mb-4">
+  <h5 class="mb-3">نوبت‌های خالی</h5>
+  {% if slots_by_date %}
+    <ul class="nav nav-pills mb-3" id="dateTabs">
+      {% for date, slots in slots_by_date.items %}
+        <li class="nav-item">
+          <button class="nav-link {% if forloop.first %}active{% endif %}" data-bs-toggle="pill" data-bs-target="#d{{ forloop.counter }}">{{ date }}</button>
+        </li>
+      {% endfor %}
+    </ul>
+    <div class="tab-content">
+      {% for date, slots in slots_by_date.items %}
+        <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="d{{ forloop.counter }}">
+          <div class="d-flex flex-wrap gap-2">
+            {% for slot in slots %}
+              <form method="post" action="{% url 'appointments:book' slot.id %}">
+                {% csrf_token %}
+                <button class="btn btn-outline-primary slot-btn" type="submit"
+                        onclick="return confirm('رزرو نوبت {{ slot.start_time }} در تاریخ {{ date }} با هزینه {{ doctor.consultation_fee }} تومان؟');">
+                  {{ slot.start_time }}
+                </button>
+              </form>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-muted">در حال حاضر نوبت خالی برای این پزشک موجود نیست.</p>
+  {% endif %}
+</div>
+
+<div class="card p-4">
+  <h5 class="mb-3">نظرات کاربران</h5>
+  {% for review in reviews %}
+    <div class="border-bottom py-2">
+      <div class="d-flex justify-content-between">
+        <strong>{{ review.appointment.patient.profile.full_name }}</strong>
+        <span class="rating-badge"><i class="bi bi-star-fill"></i> {{ review.rating }}</span>
+      </div>
+      <p class="mb-0 text-muted small">{{ review.comment }}</p>
+    </div>
+  {% empty %}
+    <p class="text-muted">هنوز نظری ثبت نشده است.</p>
+  {% endfor %}
+</div>
+{% endblock %}

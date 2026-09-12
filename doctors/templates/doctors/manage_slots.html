@@ -1,72 +1,47 @@
 {% extends "base.html" %}
-
+{% block title %}نوبت‌های من{% endblock %}
 {% block content %}
-
-<h1>مدیریت اسلات‌ها</h1>
-
-<p>
-    پزشک:
-    {{ doctor.profile.full_name }}
-</p>
-
-<form method="post" action="{% url 'doctors:generate_slots' %}">
-    {% csrf_token %}
-
-    <button type="submit">
-        ساخت اسلات‌های ۱۴ روز آینده
-    </button>
-</form>
-
-<hr>
-
-<h2>اسلات‌ها</h2>
-
-{% if slots %}
-
-    {% for slot in slots %}
-
-        <div>
-            <p>
-                تاریخ:
-                {{ slot.visit_date }}
-            </p>
-
-            <p>
-                ساعت:
-                {{ slot.start_time }}
-                -
-                {{ slot.end_time }}
-            </p>
-
-            <p>
-                وضعیت:
-                {{ slot.get_status_display }}
-            </p>
-
-            {% if slot.status == "booked" and slot.appointment %}
-                <form
-                    method="post"
-                    action="{% url 'doctors:complete_appointment' slot.appointment.pk %}"
-                >
-                    {% csrf_token %}
-
-                    <button type="submit">
-                        تکمیل نوبت
-                    </button>
-                </form>
-            {% endif %}
-        </div>
-
-        <hr>
-
-    {% endfor %}
-
-{% else %}
-
-    <p>
-        هنوز اسلاتی برای این پزشک وجود ندارد.
-    </p>
-
-{% endif %}
-
+<h4 class="mb-3">نوبت‌ها</h4>
+<div class="card p-4">
+  <table class="table align-middle">
+    <thead><tr><th>تاریخ</th><th>ساعت</th><th>وضعیت اسلات</th><th>بیمار</th><th>وضعیت نوبت</th><th></th></tr></thead>
+    <tbody>
+      {% for slot in slots %}
+      <tr>
+        <td>{{ slot.visit_date }}</td>
+        <td>{{ slot.start_time }} - {{ slot.end_time }}</td>
+        <td>
+          {% if slot.status == "free" %}<span class="badge bg-success">خالی</span>
+          {% elif slot.status == "booked" %}<span class="badge bg-primary">رزرو شده</span>
+          {% else %}<span class="badge bg-secondary">لغو شده</span>{% endif %}
+        </td>
+        <td>{{ slot.appointment.patient.profile.full_name|default:"—" }}</td>
+        <td>
+          {% if slot.appointment %}
+            {% if slot.appointment.status == "confirmed" %}<span class="badge bg-warning text-dark">تاییدشده</span>
+            {% elif slot.appointment.status == "completed" %}<span class="badge bg-success">انجام‌شده</span>
+            {% elif slot.appointment.status == "cancelled" %}<span class="badge bg-secondary">لغوشده</span>
+            {% else %}<span class="badge bg-light text-dark">{{ slot.appointment.get_status_display }}</span>{% endif %}
+          {% else %}—{% endif %}
+        </td>
+        <td>
+          {% if slot.appointment.status == "confirmed" %}
+          <form method="post" action="{% url 'doctors:complete_appointment' slot.appointment.pk %}">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-success">علامت‌گذاری به‌عنوان انجام‌شده</button>
+          </form>
+          {% elif slot.status == "free" %}
+          <form method="post" action="{% url 'doctors:delete_time_slot' slot.pk %}" onsubmit="return confirm('این نوبت خالی حذف شود؟');">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> حذف نوبت</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="text-muted text-center">نوبتی وجود ندارد.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% endblock %}
