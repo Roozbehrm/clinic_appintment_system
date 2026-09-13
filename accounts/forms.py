@@ -1,83 +1,14 @@
 from django import forms
-from django.core.validators import RegexValidator
-from .models import Profile , User
 from django.contrib.auth import password_validation
+from django.core.validators import RegexValidator, validate_email
 
-
-class PhoneOnlyForm(forms.Form):
-
-    phone_number = forms.CharField(
-        max_length=11 , label = 'شماره موبایل'
-        )
-
-    def clean_phone_number(self):
-
-        phone = self.cleaned_data.get('phone_number')
-
-        if not phone.isdigit():
-            raise forms.ValidationError ( 'شماره موبایل باید فقط شامل اعداد باشد.')
-
-        if  len(phone) != 11:
-            raise forms.ValidationError ( 'شماره موبایل باید ۱۱ رقم باشد.')
-
-
-        if not phone.startswith('09'):
-            raise forms.ValidationError ( 'شماره موبایل معتبر نیست.')
-
-        return phone
-
-
-# یک ولیدیتور برای شماره تلفن موبایل ایران
+from .models import User, Profile
 
 phone_validator = RegexValidator(r"^09\d{9}$", "شماره تلفن معتبر نیست (مثال: 09123456789)")
 
-# TASK T5.4 (Mahyar)
-class LoginForm(forms.Form):
-    phone_number = forms.CharField(
-        validators=[phone_validator],
-        label="شماره تلفن",
-        widget=forms.TextInput(attrs={'class': 'form-control text-start otp-input', 'placeholder': '09...', 'dir': 'ltr'})
-    )
-    password = forms.CharField(
-        label="رمز عبور",
-        widget=forms.PasswordInput(attrs={'class': 'form-control'})
-    )
-
-# TASK T5.8 (Mahyar)
-class ProfileForm(forms.ModelForm):
-    class Meta:
-        model = Profile
-        fields = ["full_name", "avatar", "national_code", "gender", "address"]
-        labels = {
-            "full_name": "نام کامل",
-            "avatar": "آواتار (اختیاری)",
-            "national_code": "کد ملی",
-            "gender": "جنسیت",
-            "address": "آدرس",
-        }
-        # برای زیباتر شدن فرم در اچ تی ام ال
-        widgets = {
-            "full_name": forms.TextInput(attrs={'class': 'form-control'}),
-            "national_code": forms.TextInput(attrs={'class': 'form-control'}),
-            "gender": forms.Select(attrs={'class': 'form-select'}),
-            "address": forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            "avatar": forms.FileInput(attrs={'class': 'form-control'}),
-        }
-
-# TASK T5.3 (Mahyar)    
-class OTPVerifyForm(forms.Form):
-    code = forms.CharField(
-        max_length=6,
-        label="کد تایید",
-        widget=forms.TextInput(attrs={
-            'class': 'form-control otp-input text-center', 
-            'placeholder': '------', 
-            'dir': 'ltr'
-        })
-    )
-
 
 class RegisterForm(forms.Form):
+
     phone_number = forms.CharField(validators=[phone_validator], widget=forms.TextInput(
         attrs={"class": "form-control", "placeholder": "09123456789", "dir": "ltr"}))
     email = forms.EmailField(widget=forms.EmailInput(
@@ -106,9 +37,103 @@ class RegisterForm(forms.Form):
         return email
 
 
+class QuickRegisterForm(forms.Form):
+
+    phone_number = forms.CharField(validators=[phone_validator], widget=forms.TextInput(
+        attrs={"class": "form-control", "placeholder": "09123456789", "dir": "ltr"}))
+    email = forms.EmailField(widget=forms.EmailInput(
+        attrs={"class": "form-control", "placeholder": "you@example.com", "dir": "ltr"}))
+
+    def clean_phone_number(self):
+        phone = self.cleaned_data["phone_number"]
+        if User.objects.filter(phone_number=phone, is_verified=True).exists():
+            raise forms.ValidationError("این شماره قبلا ثبت‌نام کرده است")
+        return phone
+
+    def clean_email(self):
+        email = self.cleaned_data["email"]
+        if User.objects.filter(email__iexact=email, is_verified=True).exists():
+            raise forms.ValidationError("این ایمیل قبلاً استفاده شده است")
+        return email
+
+
+class OTPVerifyForm(forms.Form):
+    code = forms.CharField(max_length=6, widget=forms.TextInput(
+        attrs={"class": "form-control text-center", "dir": "ltr", "autofocus": True,
+               "placeholder": "------", "maxlength": "6"}))
+
+
+class PhoneOnlyForm(forms.Form):
+    identifier = forms.CharField(label="شماره تلفن یا ایمیل", widget=forms.TextInput(
+        attrs={"class": "form-control", "placeholder": "09123456789 یا you@example.com", "dir": "ltr"}))
+
+    def clean_identifier(self):
+        value = self.cleaned_data["identifier"].strip()
+        if "@" in value:
+            validate_email(value)
+        else:
+            phone_validator(value)
+        return value
+
+
+class LoginForm(forms.Form):
+    identifier = forms.CharField(label="شماره تلفن یا ایمیل", widget=forms.TextInput(
+        attrs={"class": "form-control", "placeholder": "09123456789 یا you@example.com", "dir": "ltr"}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={"class": "form-control"}))
+
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ["full_name", "avatar", "avatar_pos_x", "avatar_pos_y", "national_code", "gender", "address"]
+        widgets = {
+            "full_name": forms.TextInput(attrs={"class": "form-control"}),
+            "avatar": forms.FileInput(attrs={"class": "form-control", "accept": "image/*", "id": "id_avatar"}),
+            "avatar_pos_x": forms.HiddenInput(attrs={"id": "id_avatar_pos_x"}),
+            "avatar_pos_y": forms.HiddenInput(attrs={"id": "id_avatar_pos_y"}),
+            "national_code": forms.TextInput(attrs={"class": "form-control", "dir": "ltr"}),
+            "gender": forms.Select(attrs={"class": "form-select"}),
+            "address": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["full_name"].required = True
+
+
+class ChangePasswordForm(forms.Form):
+    """تغییر رمز عبور برای کاربر لاگین‌کرده (بیمار یا پزشک) - نه فراموشی رمز."""
+    old_password = forms.CharField(label="رمز عبور فعلی", widget=forms.PasswordInput(attrs={"class": "form-control"}))
+    new_password = forms.CharField(label="رمز عبور جدید", widget=forms.PasswordInput(attrs={"class": "form-control"}))
+    new_password_confirm = forms.CharField(label="تکرار رمز عبور جدید", widget=forms.PasswordInput(attrs={"class": "form-control"}))
+
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_old_password(self):
+        old_password = self.cleaned_data["old_password"]
+        if self.user is not None and not self.user.check_password(old_password):
+            raise forms.ValidationError("رمز عبور فعلی اشتباه است.")
+        return old_password
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("new_password") and cleaned.get("new_password_confirm"):
+            if cleaned["new_password"] != cleaned["new_password_confirm"]:
+                raise forms.ValidationError("رمز عبور جدید و تکرار آن یکسان نیستند")
+            password_validation.validate_password(cleaned["new_password"], user=self.user)
+        return cleaned
+
+
 class RequestPasswordResetForm(forms.Form):
     phone_number = forms.CharField(validators=[phone_validator], widget=forms.TextInput(
         attrs={"class": "form-control", "dir": "ltr"}))
+
+
+class RequestPasswordResetByEmailForm(forms.Form):
+    email = forms.EmailField(widget=forms.EmailInput(
+        attrs={"class": "form-control", "dir": "ltr", "placeholder": "you@example.com"}))
 
 
 class SetNewPasswordForm(forms.Form):
@@ -122,3 +147,21 @@ class SetNewPasswordForm(forms.Form):
         if cleaned.get("password"):
             password_validation.validate_password(cleaned["password"])
         return cleaned
+
+
+
+from django.contrib.auth.forms import UserCreationForm as _BaseUserCreationForm
+from django.contrib.auth.forms import UserChangeForm as _BaseUserChangeForm
+
+
+class AdminUserCreationForm(_BaseUserCreationForm):
+    class Meta(_BaseUserCreationForm.Meta):
+        model = User
+        fields = ("email", "phone_number")
+        field_classes = {}
+
+
+class AdminUserChangeForm(_BaseUserChangeForm):
+    class Meta(_BaseUserChangeForm.Meta):
+        model = User
+        fields = "__all__"

@@ -1,14 +1,12 @@
 {% extends "base.html" %}
-{% block title %}ورود پزشکان{% endblock %}
+{% load socialaccount %}
+{% block title %}ورود{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-md-6 col-lg-5">
     <div class="card p-4">
-      <div class="text-center mb-3">
-        <i class="bi bi-clipboard2-pulse display-6 text-primary"></i>
-        <h4 class="mt-2">ورود پزشکان</h4>
-        <p class="text-muted small">این صفحه مخصوص ورود پزشکان به داشبورد مدیریت نوبت‌هاست.</p>
-      </div>
+      <h4 class="mb-1 text-center">ورود به حساب کاربری</h4>
+      <p class="text-muted text-center small mb-3">ورود با شماره تلفن/ایمیل و رمز عبور</p>
       <form method="post">
         {% csrf_token %}
         <div class="mb-3">
@@ -21,8 +19,24 @@
         </div>
         <button class="btn btn-primary w-100" type="submit">ورود</button>
       </form>
+
+      <div class="d-flex align-items-center my-3">
+        <hr class="flex-grow-1"><span class="px-2 text-muted small">یا</span><hr class="flex-grow-1">
+      </div>
+
+      <a href="{% url 'accounts:otp_login' %}" class="btn btn-outline-primary w-100 mb-2">
+        <i class="bi bi-shield-lock"></i> ورود فقط با کد یکبار مصرف
+      </a>
+      <a href="{% provider_login_url 'google' %}" class="btn btn-outline-danger w-100">
+        <i class="bi bi-google"></i> ورود با حساب گوگل
+      </a>
+
+      <div class="d-flex justify-content-between mt-3">
+        <a href="{% url 'accounts:request_reset' %}">فراموشی رمز عبور</a>
+        <a href="{% url 'accounts:register' %}">ثبت‌نام</a>
+      </div>
       <hr>
-      <p class="text-center small text-muted mb-0">بیمار هستید؟ <a href="{% url 'accounts:login' %}">ورود کاربران از اینجا</a></p>
+      <p class="text-center small text-muted mb-0">پزشک هستید؟ <a href="{% url 'doctors:login' %}">ورود پزشکان از اینجا</a></p>
     </div>
   </div>
 </div>

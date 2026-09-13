@@ -21,6 +21,10 @@ def find_user_by_identifier(identifier):
 
 def issue_otp(user, purpose, channel="both"):
     OTP.objects.filter(user=user, purpose=purpose, is_used=False).update(is_used=True)
+<<<<<<< HEAD
+=======
+ 
+>>>>>>> 445390f (Accounts: OTP, quick-register & avatar improvements)
     OTP.objects.filter(user=user).filter(
         Q(is_used=True) | Q(expires_at__lt=timezone.now())
     ).delete()
@@ -33,7 +37,7 @@ def _deliver_otp(user, otp, channel="both"):
     message = f"کد تایید شما: {otp.code}"
 
     if channel == "email":
-
+    
         _send_otp_email(user, message)
         return
 
@@ -42,6 +46,10 @@ def _deliver_otp(user, otp, channel="both"):
         _send_sms_safe(user, message)
         return
 
+<<<<<<< HEAD
+=======
+  
+>>>>>>> 445390f (Accounts: OTP, quick-register & avatar improvements)
     _send_sms_safe(user, message)
     _send_otp_email(user, message)
 
@@ -53,7 +61,11 @@ def _send_sms_safe(user, message):
     try:
         send_sms_task.delay(user.phone_number, message)
     except Exception:
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> 445390f (Accounts: OTP, quick-register & avatar improvements)
         logger.exception("صف‌کردن ارسال پیامک برای %s ناموفق بود", user.phone_number)
 
 

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7 col-lg-6">
+    <div class="card p-4">
+      <h4 class="mb-3">تکمیل / ویرایش پروفایل</h4>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">نام و نام خانوادگی</label>
+          {{ form.full_name }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">تصویر پروفایل</label>
+          <div class="d-flex flex-column align-items-center gap-2">
+            <div class="avatar-reposition-frame" id="avatarFrame">
+              {% if form.instance.avatar %}
+                <img id="avatarPreviewImg" src="{{ form.instance.avatar.url }}" alt=""
+                     style="object-position: {{ form.instance.avatar_pos_x }}% {{ form.instance.avatar_pos_y }}%;">
+              {% else %}
+                <img id="avatarPreviewImg" src="" alt="" style="display:none;">
+              {% endif %}
+            </div>
+            <small class="text-muted">عکس را داخل دایره بکش تا بخش دلخواه نمایش داده شود</small>
+            {{ form.avatar }}
+            {{ form.avatar_pos_x }}
+            {{ form.avatar_pos_y }}
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">کد ملی</label>
+            {{ form.national_code }}
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">جنسیت</label>
+            {{ form.gender }}
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">آدرس</label>
+          {{ form.address }}
+        </div>
+        <button class="btn btn-primary" type="submit">ذخیره</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var frame = document.getElementById("avatarFrame");
+  var img = document.getElementById("avatarPreviewImg");
+  var fileInput = document.getElementById("id_avatar");
+  var posX = document.getElementById("id_avatar_pos_x");
+  var posY = document.getElementById("id_avatar_pos_y");
+
+  function setPosition(xPercent, yPercent) {
+    xPercent = Math.max(0, Math.min(100, xPercent));
+    yPercent = Math.max(0, Math.min(100, yPercent));
+    img.style.objectPosition = xPercent + "% " + yPercent + "%";
+    posX.value = Math.round(xPercent);
+    posY.value = Math.round(yPercent);
+  }
+
+  // وقتی کاربر عکس جدید انتخاب می‌کند، همان لحظه پیش‌نمایش را نشان بده
+  // و موقعیت را به حالت وسط (۵۰٪) برگردان.
+  fileInput.addEventListener("change", function () {
+    var file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      img.src = e.target.result;
+      img.style.display = "";
+      setPosition(50, 50);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // درگ‌کردن (ماوس و لمسی) برای تنظیم اینکه کدام بخش عکس داخل دایره بیفتد.
+  var dragging = false;
+  var startClientX, startClientY, startX, startY;
+
+  function pointFromEvent(e) {
+    if (e.touches && e.touches.length) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  function dragStart(e) {
+    if (!img.src) return;
+    dragging = true;
+    var p = pointFromEvent(e);
+    startClientX = p.x;
+    startClientY = p.y;
+    startX = parseFloat(posX.value) || 50;
+    startY = parseFloat(posY.value) || 50;
+  }
+
+  function dragMove(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    var p = pointFromEvent(e);
+    var rect = frame.getBoundingClientRect();
+    // درگ به سمت راست/پایین یعنی object-position باید کم شود تا همان
+    // بخشی که کاربر می‌خواهد زیر انگشت/ماوس بماند.
+    var dxPercent = ((p.x - startClientX) / rect.width) * 100;
+    var dyPercent = ((p.y - startClientY) / rect.height) * 100;
+    setPosition(startX - dxPercent, startY - dyPercent);
+  }
+
+  function dragEnd() {
+    dragging = false;
+  }
+
+  frame.addEventListener("mousedown", dragStart);
+  window.addEventListener("mousemove", dragMove);
+  window.addEventListener("mouseup", dragEnd);
+  frame.addEventListener("touchstart", dragStart, { passive: true });
+  window.addEventListener("touchmove", dragMove, { passive: false });
+  window.addEventListener("touchend", dragEnd);
+})();
+</script>
+{% endblock %}

@@ -79,7 +79,10 @@ class QuickRegisterView(View):
             from payments.models import Wallet
             Wallet.objects.get_or_create(patient=patient)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 445390f (Accounts: OTP, quick-register & avatar improvements)
             send_new_account_credentials(user, temp_password)
             issue_otp(user, "register")
             request.session["otp_user_id"] = user.id
@@ -328,7 +331,11 @@ class RequestPasswordResetByEmailView(View):
                     )
                 except Exception:
                     pass
+<<<<<<< HEAD
  
+=======
+
+>>>>>>> 445390f (Accounts: OTP, quick-register & avatar improvements)
             messages.info(request, "اگر ایمیل واردشده در سیستم موجود باشد، لینک بازیابی برایش ارسال شد.")
             return redirect("accounts:login")
         return render(request, self.template_name, {"form": form})

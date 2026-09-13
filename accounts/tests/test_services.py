@@ -52,10 +52,10 @@ class TestIssueOTP:
     def test_previous_unused_otp_of_same_purpose_is_invalidated(self):
         user = User.objects.create(phone_number="09121115555", email="w@example.com")
         first_otp = issue_otp(user, "login")
+        first_otp_id = first_otp.id
         second_otp = issue_otp(user, "login")
 
-        first_otp.refresh_from_db()
-        assert first_otp.is_used is True
+        assert not OTP.objects.filter(id=first_otp_id).exists()
         assert second_otp.is_used is False
 
     def test_otp_of_different_purpose_is_not_invalidated(self):
@@ -91,8 +91,7 @@ class TestSendAppointmentConfirmationEmail:
         from appointments.models import Appointment
 
         patient_user.profile.user.email = ""
-        # ایمیل روی مدل User یکتاست؛ برای این تست مستقیم از دیتابیس رد می‌شویم
-        # چون هدف فقط رفتار send_appointment_confirmation_email با ایمیل خالی است.
+
         User.objects.filter(pk=patient_user.profile.user.pk).update(email="")
 
         appointment = Appointment.objects.create(

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-5">
+    <div class="card p-4">
+      <h4 class="mb-3 text-center">بازیابی رمز عبور با ایمیل</h4>
+      <p class="text-muted small text-center">یک لینک بازیابی به ایمیل‌تان ارسال می‌شود.</p>
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">ایمیل</label>
+          {{ form.email }}
+        </div>
+        <button class="btn btn-primary w-100" type="submit">ارسال لینک بازیابی</button>
+      </form>
+      <div class="text-center mt-3">
+        <a href="{% url 'accounts:request_reset' %}">به‌جای ایمیل، با شماره تلفن بازیابی کنم</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

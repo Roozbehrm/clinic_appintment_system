@@ -14,7 +14,10 @@
         <button class="btn btn-primary w-100 mt-3" type="submit">تایید</button>
       </form>
       <form method="get" action="{% url 'accounts:resend_otp' %}" class="mt-2">
-        <button class="btn btn-link" type="submit">ارسال مجدد کد</button>
+        <button class="btn btn-link" type="submit">ارسال مجدد کد (پیامک)</button>
+      </form>
+      <form method="get" action="{% url 'accounts:resend_otp' %}?via=email" class="mt-1">
+        <button class="btn btn-link btn-sm" type="submit">کد را نگرفتید؟ از طریق ایمیل ارسال شود</button>
       </form>
     </div>
   </div>
