@@ -37,6 +37,9 @@ class RegisterView(View):
             user.save()
             Profile.objects.get_or_create(user=user)
 
+            # ثبت‌نام عمومی همیشه بیمار می‌سازد؛ حساب پزشک فقط توسط ادمین از
+            # پنل مدیریت ساخته می‌شود (امنیتی: کسی نباید بتواند خودش را
+            # پزشک جا بزند).
             from patients.models import Patient
             patient, _ = Patient.objects.get_or_create(profile=user.profile)
             from payments.models import Wallet
@@ -51,7 +54,11 @@ class RegisterView(View):
 
 
 class QuickRegisterView(View):
-
+    """
+    ثبت‌نام سریع بدون تعیین رمز عبور دستی: کاربر فقط شماره+ایمیل می‌ده،
+    هویتش با OTP تایید می‌شه، و یه رمز عبور موقت (مثل زمانی که ادمین
+    برای پزشک می‌سازه) هم با پیامک هم با ایمیل براش فرستاده می‌شه.
+    """
     template_name = "accounts/quick_register.html"
 
     def get(self, request):
@@ -79,10 +86,9 @@ class QuickRegisterView(View):
             from payments.models import Wallet
             Wallet.objects.get_or_create(patient=patient)
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 445390f (Accounts: OTP, quick-register & avatar improvements)
+            # رمز موقت رو همین الان می‌فرستیم (نه بعد از تایید OTP)، چون
+            # این رمز فقط برای اولین ورود لازمه و ربطی به تایید هویت نداره؛
+            # OTP جدا صادر می‌شه تا مطمئن بشیم شماره/ایمیل واقعاً مال خودشه.
             send_new_account_credentials(user, temp_password)
             issue_otp(user, "register")
             request.session["otp_user_id"] = user.id
@@ -148,7 +154,7 @@ class ResendOTPView(View):
 
 
 class LoginView(View):
-
+    """ورود بیماران با شماره تلفن/ایمیل و رمز عبور (مخصوص پزشکان صفحه‌ی جدا وجود دارد)."""
     template_name = "accounts/login.html"
 
     def get(self, request):
@@ -160,7 +166,10 @@ class LoginView(View):
             target = find_user_by_identifier(form.cleaned_data["identifier"])
             user = None
             if target is not None:
-   
+                # USERNAME_FIELD روی مدل ما email هست؛ صرف‌نظر از این‌که
+                # کاربر با شماره وارد کرد یا ایمیل، برای authenticate باید
+                # همیشه email همون کاربر رو بدیم (چون email هیچ‌وقت خالی
+                # نیست، برخلاف phone_number که ممکنه null باشه).
                 user = authenticate(request, username=target.email,
                                      password=form.cleaned_data["password"])
             if user is not None:
@@ -185,7 +194,7 @@ class LoginView(View):
 
 
 class OTPLoginRequestView(View):
-
+    """ورود بیماران فقط با کد یکبار مصرف (بدون نیاز به رمز عبور)."""
     template_name = "accounts/otp_login.html"
 
     def get(self, request):
@@ -221,7 +230,9 @@ class RedirectAfterLoginView(LoginRequiredMixin, View):
 
     def get(self, request):
         user = request.user
-
+        # قبل از هر چیز: اگه پروفایل هنوز نام نداره (مثلاً کاربر تازه
+        # ثبت‌نام کرده)، باید اول تکمیلش کنه - even اگه از قبل نقش
+        # بیمار/پزشک هم داشته باشه.
         profile = getattr(user, "profile", None)
         if profile is not None and not profile.full_name.strip():
             return redirect("accounts:complete_profile")
@@ -241,7 +252,11 @@ class LogoutView(View):
 
 
 class ChangePasswordView(LoginRequiredMixin, View):
-
+    """
+    تغییر رمز عبور برای کاربر لاگین‌کرده (بیمار یا پزشک، فرقی نداره) —
+    برخلاف فراموشی رمز، اینجا کاربر رمز فعلی‌اش رو بلده و فقط می‌خواد
+    عوضش کنه.
+    """
     login_url = "accounts:login"
     template_name = "accounts/change_password.html"
 
@@ -253,7 +268,7 @@ class ChangePasswordView(LoginRequiredMixin, View):
         if form.is_valid():
             request.user.set_password(form.cleaned_data["new_password"])
             request.user.save()
-   
+            # وگرنه بعد از تغییر رمز، سشن کاربر باطل می‌شد و خارج می‌شد.
             update_session_auth_hash(request, request.user)
             messages.success(request, "رمز عبور با موفقیت تغییر کرد.")
             return redirect("accounts:redirect_after_login")
@@ -271,7 +286,9 @@ class RequestPasswordResetView(View):
         if form.is_valid():
             user = User.objects.filter(phone_number=form.cleaned_data["phone_number"]).first()
             if user:
-
+                # این فرم صراحتاً برای «بازیابی با شماره تلفن»ه، پس فقط
+                # پیامک بفرست - ایمیل هم فرستادن اینجا منطقی نیست (برای
+                # بازیابی با ایمیل، صفحه‌ی جدا با لینک توکن‌دار هست).
                 issue_otp(user, "reset_password", channel="sms")
                 request.session["otp_user_id"] = user.id
                 request.session["otp_purpose"] = "reset_password"
@@ -304,7 +321,11 @@ class SetNewPasswordView(View):
 
 
 class RequestPasswordResetByEmailView(View):
-
+    """
+    بازیابی رمز عبور با ایمیل: به‌جای کد یکبار مصرف، یه لینک توکن‌دار
+    (مشابه مکانیزم استاندارد جنگو) به ایمیل کاربر فرستاده می‌شه - و فقط
+    همون‌جا؛ هیچ پیامکی در این مسیر فرستاده نمی‌شه.
+    """
     template_name = "accounts/request_reset_email.html"
 
     def get(self, request):
@@ -331,18 +352,15 @@ class RequestPasswordResetByEmailView(View):
                     )
                 except Exception:
                     pass
-<<<<<<< HEAD
- 
-=======
-
->>>>>>> 445390f (Accounts: OTP, quick-register & avatar improvements)
+            # همیشه یک پیام یکسان نشون بده (چه ایمیل پیدا بشه چه نشه)، تا
+            # مشخص نشه کدوم ایمیل‌ها توی سیستم ثبت‌شدن.
             messages.info(request, "اگر ایمیل واردشده در سیستم موجود باشد، لینک بازیابی برایش ارسال شد.")
             return redirect("accounts:login")
         return render(request, self.template_name, {"form": form})
 
 
 class ResetPasswordWithTokenView(View):
-
+    """صفحه‌ای که از روی لینک ایمیل باز می‌شه و رمز عبور جدید رو می‌گیره."""
     template_name = "accounts/set_new_password.html"
 
     def _get_user(self, uidb64):

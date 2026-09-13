@@ -59,7 +59,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "config.wsgi.application"
+WSGI_APPLICATION = "clinic_appointment_system.wsgi.application"
 
 AUTH_USER_MODEL = "accounts.User"
 
