@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}کیف پول{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card p-4 text-center">
+      <i class="bi bi-wallet2 fs-1 text-primary mb-2"></i>
+      <h6 class="text-muted">موجودی فعلی</h6>
+      <h3 class="fw-bold mb-3">{{ wallet.balance }} تومان</h3>
+      <form method="post" action="{% url 'payments:wallet_deposit' %}">
+        {% csrf_token %}
+        {{ form.amount }}
+        <button class="btn btn-success w-100 mt-3" type="submit">افزایش موجودی</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card p-4">
+      <h5 class="mb-3">تراکنش‌های اخیر</h5>
+      <table class="table">
+        <thead><tr><th>نوع</th><th>مبلغ</th><th>تاریخ</th></tr></thead>
+        <tbody>
+          {% for t in transactions %}
+          <tr>
+            <td>
+              {% if t.type == "deposit" %}<span class="text-success">واریز</span>
+              {% elif t.type == "payment" %}<span class="text-danger">پرداخت</span>
+              {% else %}<span class="text-primary">بازگشت وجه</span>{% endif %}
+            </td>
+            <td>{{ t.amount }} تومان</td>
+            <td>{{ t.created_at|date:"Y-m-d H:i" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" class="text-muted text-center">تراکنشی ثبت نشده است.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
