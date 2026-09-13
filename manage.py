@@ -5,18 +5,20 @@ import sys
 
 
 def main():
-    """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'clinic_appointment_system.settings')
+    # اگر DJANGO_SETTINGS_MODULE در .env یا متغیرهای محیطی ست شده باشد
+    # (مثلاً config.settings.production)، همان استفاده می‌شود؛ در غیر این
+    # صورت پیش‌فرض توسعه (dev) فعال می‌شود.
     try:
-        from django.core.management import execute_from_command_line
-    except ImportError as exc:
-        raise ImportError(
-            "Couldn't import Django. Are you sure it's installed and "
-            "available on your PYTHONPATH environment variable? Did you "
-            "forget to activate a virtual environment?"
-        ) from exc
+        from decouple import config
+        settings_module = config("DJANGO_SETTINGS_MODULE", default="clinic_appointment_system.settings.dev")
+    except ImportError:
+        settings_module = os.environ.get("DJANGO_SETTINGS_MODULE", "clinic_appointment_system.settings.dev")
+
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", settings_module)
+    from django.core.management import execute_from_command_line
     execute_from_command_line(sys.argv)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
+
