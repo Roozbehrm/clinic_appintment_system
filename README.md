@@ -109,8 +109,8 @@ celery -A clinic_appointment_system beat -l info
 
 | متغیر | کاربرد |
 |---|---|
-| DJANGO_SETTINGS_MODULE | انتخاب محیط dev یا production |
-| SECRET_KEY, ALLOWED_HOSTS, CSRF_TRUSTED_ORIGINS | تنظیمات امنیتی production |
+| DJANGO_SETTINGS_MODULE | dev یا production انتخاب محیط|
+| SECRET_KEY, ALLOWED_HOSTS, CSRF_TRUSTED_ORIGINS |production تنظیمات امنیتی |
 | USE_SQLITE, DB_* | تنظیمات دیتابیس |
 | EMAIL_* | ارسال ایمیل واقعی |
 | GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET | ورود با گوگل |
