@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load jalali %}
 {% block title %}کیف پول{% endblock %}
 {% block content %}
 <div class="row g-4">
@@ -28,14 +29,14 @@
               {% else %}<span class="text-primary">بازگشت وجه</span>{% endif %}
             </td>
             <td>{{ t.amount_display }} تومان</td>
-            <td>{{ t.created_at|date:"Y-m-d H:i" }}</td>
+            <td>{{ t.created_at|to_jalali }} {{ t.created_at|date:"H:i" }}</td>
           </tr>
           {% empty %}
           <tr><td colspan="3" class="text-muted text-center">تراکنشی ثبت نشده است.</td></tr>
           {% endfor %}
         </tbody>
       </table>
-    </div>
+    </div>s
   </div>
 </div>
 {% endblock %}

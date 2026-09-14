@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load jalali %}
 {% load humanize %}
 {% block title %}داشبورد پزشک{% endblock %}
 {% block content %}
@@ -38,7 +39,7 @@
       {% for slot in upcoming %}
       <tr>
         <td>{{ slot.appointment.patient.profile.full_name }}</td>
-        <td>{{ slot.visit_date }}</td>
+        <td>{{ slot.visit_date|to_jalali }}</td>
         <td>{{ slot.start_time }}</td>
       </tr>
       {% empty %}
