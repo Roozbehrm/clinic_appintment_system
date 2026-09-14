@@ -67,7 +67,7 @@ def patient_user(db):
 
     profile = Profile.objects.create(user=user, full_name="بیمار تست")
     patient = Patient.objects.create(profile=profile)
-    Wallet.objects.create(patient_id=patient, balance=1000000)
+    Wallet.objects.create(patient=patient, balance=1000000)
     return patient
 
 

@@ -2,8 +2,12 @@ import sys
 
 from .base import BaseSMSBackend
 
-# show sms code in console for development and testing purposes
+
 class ConsoleBackend(BaseSMSBackend):
+    """
+    برای توسعه‌ی لوکال: به‌جای ارسال واقعی، پیامک را در کنسول/ترمینال چاپ می‌کند.
+    دقیقاً معادل ``django.core.mail.backends.console.EmailBackend``.
+    """
 
     def __init__(self, *args, stream=None, **kwargs):
         super().__init__(*args, **kwargs)

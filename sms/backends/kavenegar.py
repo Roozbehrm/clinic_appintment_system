@@ -3,9 +3,15 @@ from django.conf import settings
 
 from .base import BaseSMSBackend
 
-# change this name to your backend name, e.g. "mellipayamak"
-class KavenegarBackend(BaseSMSBackend):
 
+class KavenegarBackend(BaseSMSBackend):
+    """
+    بک‌اند نمونه برای درگاه پیامک Kavenegar (kavenegar.com) — یکی از
+    پرکاربردترین پنل‌های پیامکی ایران. برای پنل دیگری (ملی‌پیامک، فراز
+    اس‌ام‌اس و ...) کافی است یک فایل مشابه با متد send_message متناسب با
+    API همان سرویس بسازید و SMS_BACKEND را به آن اشاره دهید — کد بقیه‌ی
+    پروژه (issue_otp، ویوها و ...) دست‌نخورده می‌ماند.
+    """
 
     API_URL = "https://api.kavenegar.com/v1/{api_key}/sms/send.json"
 
@@ -17,7 +23,7 @@ class KavenegarBackend(BaseSMSBackend):
             if self.fail_silently:
                 return False
             raise ValueError(
-                "sms api key is not set. Please set SMS_API_KEY in your .env file"
+                "SMS_API_KEY تنظیم نشده است. مقدارش را در .env قرار دهید."
             )
 
         try:

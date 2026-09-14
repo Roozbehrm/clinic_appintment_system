@@ -1,52 +1,92 @@
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: clinic_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   redis:
     image: redis:alpine
     container_name: clinic_redis
-    ports:
-      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   web:
     build: .
     container_name: clinic_web
-    command: python manage.py runserver 0.0.0.0:8000
+    restart: unless-stopped
+    env_file:
+      - .env
     volumes:
-      - .:/app
-    ports:
-      - "8000:8000"
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - DEBUG=True
-      - ALLOWED_HOSTS=*
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    expose:
+      - "8000"
     depends_on:
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:alpine
+    container_name: clinic_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/media:ro
+    depends_on:
+      web:
+        condition: service_started
 
   celery_worker:
     build: .
     container_name: clinic_celery_worker
+    restart: unless-stopped
     command: celery -A clinic_appointment_system worker -l info
-    volumes:
-      - .:/app
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - DEBUG=True
-      - ALLOWED_HOSTS=*
+    env_file:
+      - .env
     depends_on:
-      - redis
-      - web
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
 
   celery_beat:
     build: .
     container_name: clinic_celery_beat
+    restart: unless-stopped
     command: celery -A clinic_appointment_system beat -l info
-    volumes:
-      - .:/app
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - DEBUG=True
-      - ALLOWED_HOSTS=*
+    env_file:
+      - .env
     depends_on:
-      - redis
-      - celery_worker
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      celery_worker:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:

@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db.models import Q, Sum
 from django.shortcuts import render, redirect, get_object_or_404
@@ -78,8 +79,14 @@ class DoctorOTPLoginRequestView(View):
 
 class HomeView(View):
     def get(self, request):
-        top_doctors = Doctor.objects.filter(is_active=True).select_related(
-            "profile", "specialty").order_by("-id")[:6]
+        top_doctors = cache.get("home_top_doctors")
+        if top_doctors is None:
+            top_doctors = list(
+                Doctor.objects.filter(is_active=True)
+                .select_related("profile", "specialty")
+                .order_by("-id")[:12]
+            )
+            cache.set("home_top_doctors", top_doctors, 60 * 10)  # ۱۰ دقیقه
         specialties = Specialty.objects.all()[:8]
         return render(request, "doctors/home.html", {
             "top_doctors": top_doctors, "specialties": specialties,

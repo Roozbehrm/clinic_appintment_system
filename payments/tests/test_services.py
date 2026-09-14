@@ -42,7 +42,7 @@ class Test_pay_for_appointment:
             status = 'pending',
         )
 
-        pay_for_appointment(wallet,price,appointment)
+        pay_for_appointment(wallet, appointment, price)
         
         wallet.refresh_from_db()
 
@@ -68,7 +68,7 @@ class Test_pay_for_appointment:
 
         with pytest.raises(ValidationError):
            
-           pay_for_appointment(wallet,price,appointment)
+           pay_for_appointment(wallet, appointment, price)
 
         wallet.refresh_from_db()
 
@@ -99,14 +99,14 @@ class Test_refund_appointment:
                             status = 'cancelled',
                         )
 
-        refund_appointment(wallet,price,appointment)
+        refund_appointment(wallet, appointment, price)
 
         wallet.refresh_from_db()
 
         assert wallet.balance ==  old_balance +  price
         assert Transaction.objects.filter(
                     wallet=wallet.id,
-                    appointments=appointment.id,
+                    appointment=appointment.id,
                     type="refund",
                     amount=Decimal("50000")
                 ).exists()

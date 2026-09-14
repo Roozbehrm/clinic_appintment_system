@@ -1,10 +1,9 @@
 from .base import BaseSMSBackend
 
-# exactly equivalent to the django.core.mail.outbox pattern in tests:
+# دقیقاً معادل الگوی django.core.mail.outbox: در تست‌ها با
 #     from sms.backends import locmem
 #     locmem.outbox
-# you can inspect the list of "sent" SMS messages.
-
+# می‌توانید لیست پیامک‌های «ارسال‌شده» را بررسی کنید.
 outbox = []
 
 
@@ -19,7 +18,8 @@ class SMSMessage:
 
 class LocmemBackend(BaseSMSBackend):
     """
-    not send real messages, just store them in memory for testing purposes.
+    برای تست‌های خودکار (pytest/unittest): پیامک واقعی ارسال نمی‌کند، فقط
+    آن را در لیست ماژول‌سطحِ ``outbox`` نگه می‌دارد تا در تست assert بزنید:
 
         from sms.backends import locmem
         ...
