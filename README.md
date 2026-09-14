@@ -115,7 +115,7 @@ celery -A clinic_appointment_system beat -l info
 | EMAIL_* | ارسال ایمیل واقعی |
 | GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET | ورود با گوگل |
 | SMS_BACKEND, SMS_API_KEY, SMS_SENDER_LINE | تنظیمات پیامک |
-| REDIS_URL | آدرس Redis برای Celery و کش |
+| REDIS_URL | و کش celery  برای  Redis آدرس  |
 
 ### ورود با گوگل
 
