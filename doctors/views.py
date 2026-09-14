@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views import View
@@ -14,6 +14,7 @@ from .forms import WorkingHourForm, DoctorProfileForm, DoctorSearchForm
 from .mixins import DoctorRequiredMixin
 from .models import Doctor, Specialty, WorkingHour, TimeSlot
 from .services import generate_time_slots
+from payments.models import Transaction
 
 
 class DoctorLoginView(View):
@@ -137,15 +138,65 @@ class DashboardView(LoginRequiredMixin, DoctorRequiredMixin, View):
         upcoming = TimeSlot.objects.filter(doctor=doctor, status="booked",
                                             visit_date__gte=today).select_related(
             "appointment__patient__profile").order_by("visit_date", "start_time")[:10]
+        earnings = Transaction.objects.filter(
+            appointment__time_slot__doctor=doctor,
+            status="success",
+        ).aggregate(
+            payments=Sum("amount", filter=Q(type="payment")),
+            refunds=Sum("amount", filter=Q(type="refund")),
+        )
+        total_earnings = (earnings["payments"] or 0) - (earnings["refunds"] or 0)
         stats = {
             "total_slots": doctor.time_slots.count(),
             "free_slots": doctor.time_slots.filter(status="free", visit_date__gte=today).count(),
             "booked_slots": doctor.time_slots.filter(status="booked", visit_date__gte=today).count(),
             "rating": doctor.average_rating,
             "review_count": doctor.review_count,
+            "earnings": total_earnings,
+            "earnings_display": f"{total_earnings:,.0f}",
         }
         return render(request, "doctors/dashboard.html", {
             "doctor": doctor, "upcoming": upcoming, "stats": stats,
+        })
+
+
+class DoctorTransactionsView(LoginRequiredMixin, DoctorRequiredMixin, View):
+    login_url = "accounts:login"
+
+    def get(self, request):
+        doctor = request.user.profile.doctor
+        transactions = Transaction.objects.filter(
+            appointment__time_slot__doctor=doctor,
+            status="success",
+            type__in=["payment", "refund"],
+        ).select_related(
+            "appointment__patient__profile",
+            "appointment__time_slot",
+        ).order_by("-created_at")
+        for transaction in transactions:
+            transaction.amount_display = f"{transaction.amount:,.0f}"
+        return render(request, "doctors/transactions.html", {
+            "doctor": doctor,
+            "transactions": transactions,
+        })
+
+
+class DoctorReviewsView(LoginRequiredMixin, DoctorRequiredMixin, View):
+    login_url = "accounts:login"
+
+    def get(self, request):
+        doctor = request.user.profile.doctor
+        from reviews.models import Review
+
+        reviews = Review.objects.filter(
+            appointment__time_slot__doctor=doctor,
+        ).select_related(
+            "appointment__patient__profile",
+            "appointment__time_slot",
+        ).order_by("-created_at")
+        return render(request, "doctors/reviews.html", {
+            "doctor": doctor,
+            "reviews": reviews,
         })
 
 

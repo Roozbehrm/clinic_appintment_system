@@ -6,7 +6,7 @@
     <div class="card p-4 text-center">
       <i class="bi bi-wallet2 fs-1 text-primary mb-2"></i>
       <h6 class="text-muted">موجودی فعلی</h6>
-      <h3 class="fw-bold mb-3">{{ wallet.balance }} تومان</h3>
+      <h3 class="fw-bold mb-3">{{ wallet.balance_display }} تومان</h3>
       <form method="post" action="{% url 'payments:wallet_deposit' %}">
         {% csrf_token %}
         {{ form.amount }}
@@ -27,7 +27,7 @@
               {% elif t.type == "payment" %}<span class="text-danger">پرداخت</span>
               {% else %}<span class="text-primary">بازگشت وجه</span>{% endif %}
             </td>
-            <td>{{ t.amount }} تومان</td>
+            <td>{{ t.amount_display }} تومان</td>
             <td>{{ t.created_at|date:"Y-m-d H:i" }}</td>
           </tr>
           {% empty %}

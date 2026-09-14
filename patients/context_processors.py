@@ -6,6 +6,7 @@ def wallet_balance(request):
 
         wallet = request.user.profile.patient.wallet
         return {
-            'wallet_balance' : wallet.balance
+            'wallet_balance': wallet.balance,
+            'wallet_balance_display': f"{wallet.balance:,.0f}",
         }
     return {}

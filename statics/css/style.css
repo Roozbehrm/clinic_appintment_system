@@ -84,11 +84,141 @@ body {
     border-radius: 14px;
     padding: 1.25rem;
     color: #fff;
+    height: 100%;
 }
+.dashboard-stats {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.dashboard-stats > .stat-card,
+.dashboard-stats > div {
+    min-width: 0;
+}
+
+@media (max-width: 991px) {
+    .dashboard-stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 575px) {
+    .dashboard-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 .stat-card.bg-1 { background: linear-gradient(135deg,#2f6fed,#5b8def); }
 .stat-card.bg-2 { background: linear-gradient(135deg,#12b886,#38d9a9); }
 .stat-card.bg-3 { background: linear-gradient(135deg,#f76707,#ffa94d); }
 .stat-card.bg-4 { background: linear-gradient(135deg,#7048e8,#9775fa); }
+
+.stat-card.bg-earnings { background: linear-gradient(135deg,#0f766e,#12b886); }
+
+.stat-card-link {
+    color: #fff;
+    display: block;
+    text-decoration: none;
+    transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.stat-card-link:hover,
+.stat-card-link:focus-visible {
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(15, 118, 110, 0.24);
+    transform: translateY(-2px);
+}
+
+.stat-earnings-value {
+    font-size: clamp(1.25rem, 2.2vw, 1.8rem);
+    font-weight: 800;
+    line-height: 1.3;
+    margin-top: 0.15rem;
+    overflow-wrap: anywhere;
+}
+
+.stat-card-unit {
+    align-items: center;
+    display: flex;
+    font-size: 0.8rem;
+    gap: 0.35rem;
+    justify-content: space-between;
+    margin-top: 0.2rem;
+    opacity: 0.9;
+}
+
+.transaction-type {
+    align-items: center;
+    display: inline-flex;
+    font-weight: 600;
+    gap: 0.35rem;
+}
+
+.transaction-payment { color: #198754; }
+.transaction-refund { color: #dc3545; }
+
+.doctor-review {
+    padding: 1rem 0;
+}
+
+.doctor-review:first-child {
+    padding-top: 0;
+}
+
+.doctor-review:last-child {
+    padding-bottom: 0;
+}
+
+.earnings-panel {
+    align-items: center;
+    background: linear-gradient(135deg, #173f8a, #2f6fed 58%, #12b886);
+    border-radius: 14px;
+    box-shadow: 0 8px 22px rgba(30, 79, 196, 0.18);
+    color: #fff;
+    display: flex;
+    gap: 1rem;
+    min-height: 126px;
+    overflow: hidden;
+    padding: 1.25rem 1.5rem;
+    position: relative;
+}
+
+.earnings-panel::after {
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 50%;
+    content: "";
+    height: 180px;
+    position: absolute;
+    right: -50px;
+    top: -75px;
+    width: 180px;
+}
+
+.earnings-icon {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    display: flex;
+    flex: 0 0 54px;
+    font-size: 1.5rem;
+    height: 54px;
+    justify-content: center;
+    width: 54px;
+}
+
+.earnings-value {
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    font-weight: 800;
+    line-height: 1.2;
+    margin: 0.15rem 0 0.3rem;
+}
+
+.earnings-value span {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
 
 .otp-input {
     letter-spacing: 0.5em;

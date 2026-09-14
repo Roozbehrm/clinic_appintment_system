@@ -4,6 +4,7 @@ from django.shortcuts import redirect, get_object_or_404, render
 from django.views import View
 
 from appointments.models import Appointment
+from .models import Review
 from .forms import ReviewForm
 
 
@@ -35,3 +36,29 @@ class AddReviewView(LoginRequiredMixin, View):
             messages.success(request, "نظر شما ثبت شد. سپاسگزاریم!")
             return redirect("patients:my_appointments")
         return render(request, self.template_name, {"form": form, "appointment": appointment})
+
+
+class EditReviewView(LoginRequiredMixin, View):
+    login_url = "accounts:login"
+    template_name = "reviews/edit_review.html"
+
+    def get_review(self, request, review_id):
+        return get_object_or_404(
+            Review,
+            pk=review_id,
+            appointment__patient=request.user.profile.patient,
+        )
+
+    def get(self, request, review_id):
+        review = self.get_review(request, review_id)
+        form = ReviewForm(instance=review)
+        return render(request, self.template_name, {"form": form, "review": review})
+
+    def post(self, request, review_id):
+        review = self.get_review(request, review_id)
+        form = ReviewForm(request.POST, instance=review)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "نظر شما ویرایش شد.")
+            return redirect("patients:my_appointments")
+        return render(request, self.template_name, {"form": form, "review": review})

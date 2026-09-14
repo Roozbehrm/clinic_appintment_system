@@ -35,6 +35,8 @@
         {% endif %}
         {% if a.is_reviewable %}
         <a href="{% url 'reviews:add_review' a.pk %}" class="btn btn-sm btn-outline-success">ثبت نظر</a>
+        {% elif a.review %}
+        <a href="{% url 'reviews:edit_review' a.review.pk %}" class="btn btn-sm btn-outline-secondary">ویرایش نظر</a>
         {% endif %}
       </div>
     </div>

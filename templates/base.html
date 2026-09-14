@@ -27,7 +27,7 @@
                 <li class="nav-item"><a class="nav-link" href="{% url 'patients:my_appointments' %}">نوبت‌های من</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'payments:wallet_detail' %}">
                     <i class="bi bi-wallet2"></i> کیف پول
-                    {% if wallet_balance is not None %}<span class="badge bg-light text-dark ms-1">{{ wallet_balance }} تومان</span>{% endif %}
+                    {% if wallet_balance is not None %}<span class="badge bg-light text-dark ms-1">{{ wallet_balance_display }} تومان</span>{% endif %}
                 </a></li>
                 {% endif %}
                 {% if user.is_authenticated and user.is_doctor %}

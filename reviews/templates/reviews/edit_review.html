@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}ویرایش نظر{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card p-4">
+      <h5 class="mb-3">ویرایش نظر برای دکتر {{ review.appointment.time_slot.doctor.profile.full_name }}</h5>
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">امتیاز</label>
+          {{ form.rating }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">نظر</label>
+          {{ form.comment }}
+        </div>
+        <button class="btn btn-primary w-100" type="submit">ذخیره تغییرات</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,13 +1,27 @@
 {% extends "base.html" %}
+{% load humanize %}
 {% block title %}داشبورد پزشک{% endblock %}
 {% block content %}
 <h4 class="mb-4">داشبورد دکتر {{ doctor.profile.full_name }}</h4>
 
-<div class="row g-3 mb-4">
-  <div class="col-md-3 col-6"><div class="stat-card bg-1"><div class="small">کل اسلات‌ها</div><div class="fs-3 fw-bold">{{ stats.total_slots }}</div></div></div>
-  <div class="col-md-3 col-6"><div class="stat-card bg-2"><div class="small">خالی (آینده)</div><div class="fs-3 fw-bold">{{ stats.free_slots }}</div></div></div>
-  <div class="col-md-3 col-6"><div class="stat-card bg-3"><div class="small">رزرو شده (آینده)</div><div class="fs-3 fw-bold">{{ stats.booked_slots }}</div></div></div>
-  <div class="col-md-3 col-6"><div class="stat-card bg-4"><div class="small">امتیاز</div><div class="fs-3 fw-bold"><i class="bi bi-star-fill"></i> {{ stats.rating }}</div></div></div>
+<div class="dashboard-stats mb-4">
+  <div class="stat-card bg-1"><div class="small">کل اسلات‌ها</div><div class="fs-3 fw-bold">{{ stats.total_slots }}</div></div>
+  <div class="stat-card bg-2"><div class="small">خالی (آینده)</div><div class="fs-3 fw-bold">{{ stats.free_slots }}</div></div>
+  <div class="stat-card bg-3"><div class="small">رزرو شده (آینده)</div><div class="fs-3 fw-bold">{{ stats.booked_slots }}</div></div>
+  <div>
+    <a href="{% url 'doctors:reviews' %}" class="stat-card bg-4 stat-card-link">
+      <div class="small"> امتیاز و نظرات</div>
+      <div class="fs-3 fw-bold"><i class="bi bi-star-fill"></i> {{ stats.rating }}</div>
+      <div class="stat-card-unit">{{ stats.review_count }} نظر <i class="bi bi-arrow-left-circle"></i></div>
+    </a>
+  </div>
+  <div>
+    <a href="{% url 'doctors:transactions' %}" class="stat-card bg-earnings stat-card-link">
+      <div class="small">درآمد کل</div>
+      <div class="stat-earnings-value">{{ stats.earnings_display }}</div>
+      <div class="stat-card-unit">تومان <i class="bi bi-arrow-left-circle"></i></div>
+    </a>
+  </div>
 </div>
 
 <div class="d-flex gap-2 mb-4">

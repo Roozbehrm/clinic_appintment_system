@@ -13,6 +13,9 @@ class WalletDetailView(LoginRequiredMixin, View):
     def get(self, request):
         wallet = request.user.profile.patient.wallet
         transactions = wallet.transactions.all()[:30]
+        wallet.balance_display = f"{wallet.balance:,.0f}"
+        for transaction in transactions:
+            transaction.amount_display = f"{transaction.amount:,.0f}"
         form = DepositForm()
         return render(request, "payments/wallet.html", {
             "wallet": wallet, "transactions": transactions, "form": form,

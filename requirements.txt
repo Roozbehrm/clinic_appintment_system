@@ -12,5 +12,5 @@ redis==5.0.4
 Faker==26.0.0
 pytest==8.3.2
 pytest-django==4.9.0
-
+jdatetime
 
