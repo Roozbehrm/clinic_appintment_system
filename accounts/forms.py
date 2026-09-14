@@ -101,6 +101,25 @@ class ProfileForm(forms.ModelForm):
         self.fields["full_name"].required = True
 
 
+class EmailChangeForm(forms.Form):
+    email = forms.EmailField(
+        label="ایمیل",
+        widget=forms.EmailInput(attrs={"class": "form-control", "dir": "ltr"}),
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            self.fields["email"].initial = user.email
+
+    def clean_email(self):
+        email = self.cleaned_data["email"]
+        if User.objects.filter(email__iexact=email).exclude(pk=self.user.pk).exists():
+            raise forms.ValidationError("این ایمیل قبلاً استفاده شده است.")
+        return email
+
+
 class ChangePasswordForm(forms.Form):
     """تغییر رمز عبور برای کاربر لاگین‌کرده (بیمار یا پزشک) - نه فراموشی رمز."""
     old_password = forms.CharField(label="رمز عبور فعلی", widget=forms.PasswordInput(attrs={"class": "form-control"}))

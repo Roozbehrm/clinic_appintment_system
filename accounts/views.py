@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
+from django.core import signing
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
 from django.utils.crypto import get_random_string
@@ -11,7 +12,7 @@ from django.views import View
 
 from .forms import (RegisterForm, QuickRegisterForm, OTPVerifyForm, LoginForm, ProfileForm,
                      ChangePasswordForm, RequestPasswordResetForm, RequestPasswordResetByEmailForm,
-                     SetNewPasswordForm, PhoneOnlyForm)
+                     SetNewPasswordForm, PhoneOnlyForm, EmailChangeForm)
 from .models import User, OTP, Profile
 from .services import issue_otp, find_user_by_identifier, send_new_account_credentials
 from .tasks import send_email_task
@@ -397,12 +398,55 @@ class CompleteProfileView(LoginRequiredMixin, View):
 
     def get(self, request):
         form = ProfileForm(instance=request.user.profile)
-        return render(request, self.template_name, {"form": form})
+        email_form = EmailChangeForm(user=request.user)
+        return render(request, self.template_name, {"form": form, "email_form": email_form})
 
     def post(self, request):
         form = ProfileForm(request.POST, request.FILES, instance=request.user.profile)
+        email_form = EmailChangeForm(request.POST, user=request.user)
         if form.is_valid():
             form.save()
+        if form.is_valid() and email_form.is_valid():
+            new_email = email_form.cleaned_data["email"]
+            if new_email.lower() != request.user.email.lower():
+                token = signing.dumps(
+                    {"user_id": request.user.pk, "email": new_email},
+                    salt="email-change",
+                )
+                confirmation_url = request.build_absolute_uri(
+                    reverse("accounts:confirm_email_change", args=[token])
+                )
+                send_email_task.delay(
+                    "تایید تغییر ایمیل",
+                    f"برای تایید تغییر ایمیل روی لینک زیر کلیک کنید:\n\n{confirmation_url}\n\nاین لینک تا ۲۴ ساعت معتبر است.",
+                    [new_email],
+                )
+                messages.info(request, "لینک تایید به ایمیل جدید ارسال شد.")
             messages.success(request, "پروفایل بروزرسانی شد.")
             return redirect("accounts:redirect_after_login")
-        return render(request, self.template_name, {"form": form})
+        return render(request, self.template_name, {"form": form, "email_form": email_form})
+
+
+class ConfirmEmailChangeView(LoginRequiredMixin, View):
+    login_url = "accounts:login"
+
+    def get(self, request, token):
+        try:
+            payload = signing.loads(token, salt="email-change", max_age=86400)
+        except signing.BadSignature:
+            messages.error(request, "لینک تغییر ایمیل نامعتبر یا منقضی شده است.")
+            return redirect("accounts:complete_profile")
+
+        if payload.get("user_id") != request.user.pk:
+            messages.error(request, "این لینک برای حساب کاربری دیگری صادر شده است.")
+            return redirect("accounts:complete_profile")
+
+        new_email = payload.get("email", "")
+        if User.objects.filter(email__iexact=new_email).exclude(pk=request.user.pk).exists():
+            messages.error(request, "این ایمیل قبلاً استفاده شده است.")
+            return redirect("accounts:complete_profile")
+
+        request.user.email = new_email
+        request.user.save(update_fields=["email", "updated_at"])
+        messages.success(request, "ایمیل شما با موفقیت تغییر کرد.")
+        return redirect("accounts:complete_profile")

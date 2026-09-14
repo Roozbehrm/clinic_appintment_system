@@ -26,4 +26,9 @@ class UserManager(BaseUserManager):
             raise ValueError("سوپریوزر باید is_staff=True باشد")
         if extra_fields.get("is_superuser") is not True:
             raise ValueError("سوپریوزر باید is_superuser=True باشد")
-        return self._create_user(email, password, **extra_fields)
+        user = self._create_user(email, password, **extra_fields)
+        
+        from .models import Profile
+
+        Profile.objects.get_or_create(user=user)
+        return user

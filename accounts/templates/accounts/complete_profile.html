@@ -7,6 +7,12 @@
       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="mb-3">
+          <label class="form-label">ایمیل</label>
+          {{ email_form.email }}
+          {% for error in email_form.email.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+          <div class="form-text">برای تغییر ایمیل، لینک تایید به ایمیل جدید ارسال می‌شود.</div>
+        </div>
+        <div class="mb-3">
           <label class="form-label">نام و نام خانوادگی</label>
           {{ form.full_name }}
         </div>
