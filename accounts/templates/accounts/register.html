@@ -32,15 +32,20 @@
       </form>
 
       <div class="d-flex align-items-center my-3">
-        <hr class="flex-grow-1"><span class="px-2 text-muted small">یا</span><hr class="flex-grow-1">
+        <hr class="flex-grow-1"><span class="px-2 text-muted small">یا</span>
+        <hr class="flex-grow-1">
       </div>
       <a href="{% provider_login_url 'google' %}" class="btn btn-outline-danger w-100">
         <i class="bi bi-google"></i> ثبت‌نام / ورود با گوگل
       </a>
       <p class="text-muted small text-center mt-2 mb-0">ثبت‌نام با گوگل به‌صورت پیش‌فرض با نقش «بیمار» انجام می‌شود.</p>
-
+      <div class="text-center mt-2 mb-0">
+        <a href="{% url 'accounts:quick_register' %}" class="btn btn-outline-primary btn-sm">
+          <i class="bi bi-lightning-charge"></i>  ثبت‌نام سریع (بدون رمز عبور)
+        </a>
+      </div>
       <p class="text-center mt-3 mb-0">حساب دارید؟ <a href="{% url 'accounts:login' %}">ورود</a></p>
-      <p class="text-center mt-1 mb-0"><a href="{% url 'accounts:quick_register' %}">ترجیح می‌دهید بدون تعیین رمز عبور، فقط با کد یکبار مصرف ثبت‌نام کنید؟</a></p>
+
       <hr>
       <p class="text-center small text-muted mb-0">پزشک هستید؟ حساب پزشک فقط توسط مدیریت سایت ساخته می‌شود.</p>
     </div>
