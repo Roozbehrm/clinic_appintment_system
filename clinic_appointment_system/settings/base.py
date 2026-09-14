@@ -133,6 +133,12 @@ CELERY_BROKER_URL = config("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = config("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
+CELERY_BEAT_SCHEDULE = {
+    "cleanup-expired-free-slots-every-two-hours": {
+        "task": "doctors.tasks.cleanup_expired_free_slots",
+        "schedule": 2 * 60 * 60,
+    },
+}
 
 OTP_EXPIRY_MINUTES = 5
 

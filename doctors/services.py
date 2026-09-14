@@ -1,6 +1,22 @@
 from datetime import datetime, timedelta
 
+from django.db.models import Q
+from django.utils import timezone
+
 from .models import TimeSlot, PY_WEEKDAY_TO_OUR
+
+
+def delete_expired_free_slots(doctor=None):
+    now = timezone.localtime()
+    slots = TimeSlot.objects.filter(status="free")
+    if doctor is not None:
+        slots = slots.filter(doctor=doctor)
+    expired_slots = slots.filter(
+        Q(visit_date__lt=now.date())
+        | Q(visit_date=now.date(), end_time__lte=now.time().replace(tzinfo=None))
+    )
+    deleted_count, _ = expired_slots.delete()
+    return deleted_count
 
 
 def generate_time_slots(doctor, days_ahead=14):

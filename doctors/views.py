@@ -111,8 +111,12 @@ class SearchDoctorsView(View):
 class DoctorDetailView(View):
     def get(self, request, pk):
         doctor = get_object_or_404(Doctor.objects.select_related("profile", "specialty"), pk=pk)
-        today = timezone.now().date()
-        slots = doctor.time_slots.filter(status="free", visit_date__gte=today).order_by(
+        now = timezone.localtime()
+        slots = doctor.time_slots.filter(
+            Q(status="free")
+            & (Q(visit_date__gt=now.date())
+               | Q(visit_date=now.date(), end_time__gt=now.time().replace(tzinfo=None)))
+        ).order_by(
             "visit_date", "start_time")[:60]
 
         slots_by_date = {}

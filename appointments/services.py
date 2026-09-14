@@ -1,5 +1,8 @@
+from datetime import datetime
+
 from django.core.exceptions import ValidationError
 from django.db import transaction as db_transaction
+from django.utils import timezone
 
 from doctors.models import TimeSlot
 from payments.services import pay_for_appointment
@@ -11,6 +14,10 @@ from .models import Appointment
 def book_appointment(patient, time_slot_id):
     with db_transaction.atomic():
         slot = TimeSlot.objects.select_for_update().get(pk=time_slot_id)
+        visit_end = datetime.combine(slot.visit_date, slot.end_time)
+        visit_end = timezone.make_aware(visit_end, timezone.get_current_timezone())
+        if visit_end <= timezone.now():
+            raise ValidationError("این نوبت منقضی شده است.")
         if slot.status != "free":
             raise ValidationError("این نوبت دیگر خالی نیست.")
 
