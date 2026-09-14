@@ -32,18 +32,16 @@ class TestDoctor:
         other_user = User.objects.create(phone_number="09129999999", email="doc2@example.com")
         other_profile = Profile.objects.create(user=other_user, full_name="دکتر دو")
 
-        # نکته: خطای مورد انتظار را داخل transaction.atomic() (savepoint) قرار
-        # می‌دهیم، وگرنه روی برخی دیتابیس‌ها (مثل PostgreSQL) کل تراکنش تست
-        # بعد از IntegrityError خراب می‌شود و دستورهای بعدی خطا می‌دهند.
+
         with pytest.raises(IntegrityError):
             with transaction.atomic():
                 Doctor.objects.create(
                     profile=other_profile, specialty=specialty,
-                    mcc=doctor_user.mcc,  # همان mcc دکتر قبلی — باید رد شود
+                    mcc=doctor_user.mcc,  
                     consultation_fee=100000,
                 )
 
-        # اثبات این‌که تراکنش سالم مانده و ادامه‌ی تست بدون خطا کار می‌کند
+
         assert Doctor.objects.filter(mcc=doctor_user.mcc).count() == 1
 
 
