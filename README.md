@@ -1,328 +1,172 @@
-# 🏥 سیستم نوبت‌دهی آنلاین پزشکان
+# سیستم نوبت‌دهی آنلاین پزشکان
 
-پروژه‌ی بوت‌کمپ Quera — مدیریت و رزرو آنلاین نوبت‌های ویزیت پزشکان با معماری MVT جنگو.
+پروژه‌ی بوت‌کمپ Quera برای مدیریت و رزرو آنلاین نوبت‌های ویزیت پزشکان، با معماری MVT جنگو.
 
-## ✨ فیچرهای اصلی
+نمودار ERD در فایل `ERD.png` موجود است.
 
-### 🔐 سیستم احراز هویت پیشرفته
-- **ثبت نام بدون رمز**: کاربران می‌توانند بدون تعیین رمز ثبت‌نام کنند؛ سیستم خودکار یک رمز محفوظ برای آنها ایجاد می‌کند
-- **تایید دو مرحله‌ای (OTP)**:
-  - ✉️ ارسال کد تایید از طریق **ایمیل**
-  - 📱 ارسال کد تایید از طریق **پیامک (SMS)**
-- **لاگین با گوگل**: یکپارچگی با Google OAuth برای ورود سریع و امن
-- **مدیریت پروفایل**: سفارشی‌سازی اطلاعات کاربری و عکس پروفایل
+## امکانات
 
-### 👨‍⚕️ داشبورد دکتر
-داشبورد جامع برای دکترها شامل:
-- 📊 **نمایش درآمد**: مجموع درآمد و تفکیک تراکنش‌ها
-- ⭐ **مدیریت نظرات و امتیازات**: مشاهده و پاسخ به نظرات بیماران
-- 🕐 **تعیین ساعات کاری**: تعریف روزهای کاری و ساعات دسترسی
-- 📅 **مدیریت نوبت‌ها**: مشاهده نوبت‌های رزرو شده و لغو‌شده
-- 👥 **نمایش اطلاعات بیماران**: جزئیات بیمار برای هر نوبت
+- ثبت‌نام و ورود با شماره تلفن یا ایمیل
+- ورود سریع با کد یکبار مصرف (پیش‌فرض، بدون رمز عبور) یا با رمز عبور، برای بیمار و پزشک
+- ورود با حساب گوگل برای بیماران
+- صفحه‌ی ورود جداگانه برای پزشکان
+- پروفایل کاربری با آواتار قابل‌تنظیم و تاریخ تولد شمسی برای بیماران
+- ساخت حساب پزشک از پنل ادمین، شامل تخصص، شماره نظام پزشکی و هزینه‌ی ویزیت
+- تعریف ساعات کاری پزشک و تولید خودکار نوبت‌های خالی
+- جستجوی پزشک بر اساس نام یا تخصص
+- رزرو و لغو نوبت با کسر و بازگشت خودکار از کیف‌پول
+- ثبت نظر و امتیاز بیمار برای پزشک
+- نمایش تاریخ‌ها به شمسی در تمام صفحات
+- ارسال پیامک با بک‌اند قابل‌تعویض (کنسول، Kavenegar، ملی‌پیامک)
+- ارسال ایمیل برای تاییدیه‌ی رزرو، بازیابی رمز عبور و تغییر ایمیل
+- پردازش ناهمگام با Celery برای ارسال پیام‌ها و پاک‌سازی دوره‌ای نوبت‌های منقضی
+- دستور مدیریتی برای ساخت داده‌ی نمونه با Faker
+- تست‌های خودکار با pytest
 
-### 🗓️ مدیریت ذکی TimeSlots
-- **ایجاد خودکار نوبت‌های خالی**: بر اساس ساعات کاری تعریف‌شده
-- **حذف خودکار TimeSlots منقضی**: 
-  - ✅ هر ساعت از طریق **Celery Task** اجرا می‌شود
-  - 🧹 نوبت‌های گذشته به‌صورت خودکار از دیتابیس حذف می‌شوند
-  - 📌 فقط نوبت‌های خالی (رزرو نشده) حذف می‌شوند
+## پشته‌ی فنی
 
-### 💳 سیستم پرداخت و کیف پول
-- **کیف پول الکترونیک**: شارژ و کسر موجودی برای بیماران
-- **تاریخچه تراکنش‌ها**: مشاهده دقیق تمام تراکنش‌ها
-- **رزرو امن نوبت**: کسر هزینه با تراکنش درون‌سیستمی
+Django 5.2، PostgreSQL، Redis، Celery، django-allauth، Gunicorn، nginx، WhiteNoise، jdatetime، Bootstrap 5
 
-### 📋 سیستم نقاشی و نوبت‌ها
-- **رزرو نوبت آنلاین**: انتخاب دکتر، تخصص و زمان مناسب
-- **لغو نوبت**: لغو نوبت‌های رزرو شده (تا ۲۴ ساعت قبل)
-- **نظرات و امتیازات**: ثبت نظر بیماران پس از ویزیت
+## ساختار اپ‌ها
 
-## 🏗️ ساختار اپ‌ها
+| اپ | مسئولیت |
+|---|---|
+| accounts | کاربر، احراز هویت، پروفایل |
+| doctors | پزشک، تخصص، ساعات کاری، نوبت‌های خالی |
+| patients | بیمار، نوبت‌های من |
+| payments | کیف‌پول و تراکنش‌ها |
+| appointments | رزرو و لغو نوبت |
+| reviews | نظر و امتیاز |
+| common | ابزارهای مشترک بین اپ‌ها |
 
-| اپ | مسئولیت | کلیدی ترین مدل‌ها |
-|---|---|---|
-| **`accounts`** | احراز هویت، ثبت‌نام، OTP و پروفایل کاربر | `User` (سفارشی)، `OTPToken` |
-| **`doctors`** | مدیریت دکترها و ساعات کاری | `Doctor`، `Specialty`، `WorkingHour`، `TimeSlot` |
-| **`patients`** | مدیریت بیماران و اطلاعات شخصی | `Patient` |
-| **`payments`** | کیف پول و تراکنش‌ها | `Wallet`، `Transaction` |
-| **`appointments`** | نوبت‌ها و منطق رزرو/لغو | `Appointment` |
-| **`reviews`** | نقاشی و امتیازات دکترها | `Review` |
-| **`sms`** | ارسال SMS و OTP | Backend مختلف برای SMS |
+## تنظیمات
 
-نمودار ERD در `documents/ERD.png` قرار دارد.
+تنظیمات پروژه در `clinic_appointment_system/settings/` به سه بخش تقسیم شده:
 
-## 🛠️ تکنولوژی و فریم‌ورک‌ها
+- `base.py`: تنظیمات مشترک
+- `dev.py`: محیط توسعه، SQLite، ایمیل و پیامک در کنسول
+- `test.py`: مخصوص اجرای تست‌ها
+- `production.py`: محیط نهایی، PostgreSQL، HTTPS، ایمیل و پیامک واقعی
 
-### بک‌اند
-- **Django 4.2+**: فریم‌ورک وب پایتون
-- **Django REST Framework**: برای API (اگر مورد نیاز)
-- **django-allauth**: احراز هویت و OAuth (گوگل)
-- **Celery + Redis**: تسک‌های ناهمزمان و حذف خودکار TimeSlots
-- **PostgreSQL / SQLite**: پایگاه داده
+انتخاب محیط با متغیر `DJANGO_SETTINGS_MODULE` در فایل `.env` انجام می‌شود:
 
-### فرانت‌اند
-- **HTML5 / CSS3**: الگوها و استایل‌ها
-- **Bootstrap / Tailwind CSS**: طراحی responsive
-- **JavaScript**: تعامل کاربری
-
-### دیپلویمنت
-- **Docker & Docker Compose**: کنتینرایزاسیون
-- **Gunicorn**: سرور WSGI
-- **Nginx**: reverse proxy
-
-## 📋 نیازمندی‌های سیستم
-
-- **Python 3.9+**
-- **pip** و **venv**
-- **PostgreSQL 12+** (اختیاری - SQLite برای توسعه کافیست)
-- **Redis** (برای Celery)
-- **Docker** (پیشنهادی)
-
-## ⚙️ تنظیمات: توسعه (dev) در برابر پروداکشن (production)
-
-`config/settings/` یک پکیج است، نه یک فایل:
 ```
-config/settings/
-├── base.py         # مشترک بین هر دو محیط
-├── dev.py          # DEBUG=True، SQLite، ایمیل/پیامک کنسول
-└── production.py   # DEBUG=False، Postgres اجباری، HTTPS/HSTS، ایمیل و پیامک واقعی
-```
-سوییچ بین این دو فقط با متغیر محیطی `DJANGO_SETTINGS_MODULE` انجام می‌شود
-(در `.env`):
-```bash
-DJANGO_SETTINGS_MODULE=config.settings.dev          # پیش‌فرض توسعه
-DJANGO_SETTINGS_MODULE=config.settings.production    # پروداکشن
-```
-`docker-compose.yml` همیشه `production` را صریح ست می‌کند (نیازی به تغییر
-دستی نیست). اگر بدون Docker و بدون تنظیم این متغیر اجرا کنید، پیش‌فرض `dev`
-فعال می‌شود.
-
-⚠️ `config.settings.production` عمداً برای `SECRET_KEY`، `ALLOWED_HOSTS` و
-اطلاعات دیتابیس مقدار پیش‌فرض ندارد — اگر در `.env` ست نشوند، اجرا با خطا
-متوقف می‌شود (به‌جای بالاآمدن ناامن با مقادیر توسعه).
-
-### متغیرهای محیطی اساسی
-
-```bash
-# احراز هویت گوگل (برای OAuth)
-GOOGLE_OAUTH_CLIENT_ID=your_client_id
-GOOGLE_OAUTH_CLIENT_SECRET=your_client_secret
-
-# تنظیمات ایمیل (برای OTP و اطلاع‌رسانی)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_HOST_USER=your_email@gmail.com
-EMAIL_HOST_PASSWORD=your_app_password
-
-# تنظیمات SMS (برای OTP)
-SMS_API_KEY=your_sms_provider_api_key
-SMS_FROM_NUMBER=your_sender_number
-
-# Celery و Redis (برای تسک‌های ناهمزمان)
-CELERY_BROKER_URL=redis://localhost:6379/0
-CELERY_RESULT_BACKEND=redis://localhost:6379/0
-
-# دیتابیس PostgreSQL (پروداکشن)
-DB_NAME=clinic_db
-DB_USER=clinic_user
-DB_PASSWORD=strong_password
-DB_HOST=localhost
-DB_PORT=5432
+DJANGO_SETTINGS_MODULE=clinic_appointment_system.settings.dev
+DJANGO_SETTINGS_MODULE=clinic_appointment_system.settings.production
 ```
 
-## 🔄 تسک‌های خودکار (Celery)
+در `docker-compose.yml` این مقدار همیشه روی production تنظیم شده است. در
+صورت اجرای بدون Docker و نبود این متغیر، محیط dev فعال می‌شود.
 
-### حذف خودکار TimeSlots منقضی
-```python
-# هر ساعت اجرا می‌شود
-tasks.delete_expired_timeslots()
-```
-این تسک:
-- ✅ تمام `TimeSlot`های که زمان آنها گذشته است را پیدا می‌کند
-- ✅ فقط نوبت‌های **خالی** (رزرو نشده) حذف می‌شود
-- ✅ نوبت‌های رزرو شده محفوظ می‌ماند
-- ✅ هر ساعت خودکار اجرا می‌شود
+توجه: در تنظیمات production، مقادیر `SECRET_KEY`، `ALLOWED_HOSTS` و اطلاعات
+دیتابیس مقدار پیش‌فرض ندارند و باید در `.env` تعیین شوند.
 
-### راه‌اندازی Celery
-```bash
-# شروع Celery Worker
-celery -A clinic_appointment_system worker -l info
-
-# شروع Celery Beat (برای تسک‌های دوره‌ای)
-celery -A clinic_appointment_system beat -l info
-```
-
-## 🚀 راه‌اندازی با Docker (روش پیشنهادی)
+## راه‌اندازی با Docker
 
 ```bash
 cp .env.example .env
-# مقادیر .env را (به‌خصوص SECRET_KEY) ویرایش کنید
 docker compose up --build
 ```
 
-سپس یک بار کاربر ادمین بسازید:
+این دستور سرویس‌های db، redis، web، nginx، celery_worker و celery_beat را
+اجرا می‌کند. برای ساخت کاربر ادمین:
+
 ```bash
 docker compose exec web python manage.py createsuperuser
 ```
 
-پروژه روی `http://localhost:8000` بالا می‌آید.
+آدرس پروژه پس از اجرا: `http://localhost`
 
-## 👨‍⚕️ داشبورد دکتر - راهنمای استفاده
+توجه: تنظیمات nginx فعلاً بدون گواهی SSL است. اگر `SECURE_SSL_REDIRECT`
+روی True باشد و SSL واقعی پیکربندی نشده باشد، سایت بالا نمی‌آید. تا آماده
+شدن SSL، این مقدار را False بگذارید.
 
-### دسترسی
-- **URL**: `http://localhost:8000/doctor/dashboard/`
-- **نیاز دارد**: ورود به عنوان دکتر
+## راه‌اندازی بدون Docker
 
-### بخش‌های اصلی
-
-#### 📊 درآمد و مالی
-- **مجموع درآمد**: کل پول دریافتی از تمام نوبت‌های پزشکی
-- **آخرین تراکنش‌ها**: فهرست ۱۰ آخرین پرداخت
-- **تفکیک درآمد**: بر اساس تاریخ/نوع ویزیت
-
-#### ⭐ نقاشی و امتیازات
-- **میانگین امتیاز**: نمایش رتبه‌ی کلی دکتر (۱ تا ۵ ستاره)
-- **تعداد نقاشی**: کل نقاشی‌های دریافتی
-- **دیدگاه‌های اخیر**: نمایش ۵ آخرین نظر با جزئیات
-
-#### 🕐 ساعات کاری
-- **افزودن ساعات**: تعیین روزهای کاری و ساعات شروع/پایان
-- **ویرایش ساعات**: تغییر ساعات قبلی
-- **نوبت‌های خودکار**: سیستم خودکار TimeSlot‌های خالی را برای شما ایجاد می‌کند
-
-#### 📅 مدیریت نوبت‌ها
-- **نوبت‌های پیش‌رو**: لیست نوبت‌های آینده
-- **نوبت‌های گذشته**: تاریخچه ویزیت‌های انجام‌شده
-- **لغو نوبت**: امکان لغو در صورت ضرورت
-
-#### 👥 اطلاعات بیماران
-- **نام و شماره تلفن**: تماس با بیمار
-- **سابقه ویزیت‌ها**: مشاهده نوبت‌های قبلی هر بیمار
-
-## 📱 سیستم OTP و احراز هویت
-
-### روش ثبت‌نام و ورود
-1. **کاربر شماره تلفن/ایمیل را وارد می‌کند**
-2. **سیستم کد OTP را ارسال می‌کند**:
-   - 📧 **Email OTP**: برای ایمیل
-   - 📱 **SMS OTP**: برای شماره تلفن
-3. **کاربر کد را تایید می‌کند**
-4. **سیستم خودکار یک رمز محفوظ ایجاد می‌کند** (بدون اینکه کاربر نیاز داشته باشد)
-5. **اکاونت ایجاد و فعال می‌شود**
-
-### تنظیم OTP
-- **مدت زمان اعتبار OTP**: 10 دقیقه
-- **طول کد**: 6 رقم
-- **تعداد تلاش مجاز**: ۵ تلاش
-
-### لاگین گوگل (OAuth)
-```
-1. کاربر روی "ورود با گوگل" کلیک می‌کند
-2. Google OAuth dialog باز می‌شود
-3. کاربر اکاونت گوگل خود را انتخاب می‌کند
-4. حساب کاربری خودکار ایجاد/تایید می‌شود
-5. کاربر وارد سیستم می‌شود
-```
-
-## 🖥️ راه‌اندازی بدون Docker (توسعه لوکال)
-
-> ⚠️ چون فیلد `email` روی مدل `User` از حالت اختیاری به «اجباری و یکتا»
-> تغییر کرده، اگر از قبل دیتابیس (`db.sqlite3`) با رکوردهای بدون ایمیل
-> دارید، مایگریشن ممکن است خطا بدهد. ساده‌ترین راه در محیط توسعه: فایل
-> `db.sqlite3` را حذف کنید و از صفر `makemigrations`/`migrate` بزنید.
-
-1. ساخت محیط مجازی و نصب پکیج‌ها:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate   # ویندوز: venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
-2. فایل `.env` را از روی `.env.example` بسازید:
-   ```bash
-   cp .env.example .env
-   ```
-   به‌صورت پیش‌فرض `USE_SQLITE=True` است، یعنی نیازی به نصب/تنظیم Postgres نیست و
-   دیتابیس به‌صورت فایل `db.sqlite3` ساخته می‌شود — برای توسعه و تست سریع کافیست.
-   اگر می‌خواهید از Postgres واقعی استفاده کنید، `USE_SQLITE=False` بگذارید و
-   `DB_NAME/DB_USER/DB_PASSWORD/DB_HOST/DB_PORT` را مطابق دیتابیسی که خودتان
-   روی سیستم ساخته‌اید (و رمز عبورش را می‌دانید) پر کنید.
-3. مایگریشن و اجرا:
-   ```bash
-   python manage.py migrate
-   python manage.py createsuperuser
-   python manage.py runserver
-```
-
-## 📁 ساختار پروژه
-
-```
-clinic_appointment_system/
-├── accounts/                 # مدیریت اکاونت و احراز هویت
-│   ├── models.py            # User سفارشی
-│   ├── views.py             # ورود، ثبت‌نام، OTP
-│   └── services.py          # کارهای OTP و کاربر
-├── doctors/                  # مدیریت دکترها و ساعات کاری
-│   ├── models.py            # Doctor, WorkingHour, TimeSlot
-│   ├── views.py             # داشبورد و مدیریت ساعات
-│   └── services.py          # تولید TimeSlot خودکار
-├── appointments/            # رزرو و مدیریت نوبت‌ها
-│   ├── models.py            # Appointment
-│   └── views.py             # رزرو و لغو
-├── patients/                # مدیریت بیماران
-│   └── models.py            # Patient
-├── payments/                # مدیریت پرداخت و کیف‌پول
-│   ├── models.py            # Wallet, Transaction
-│   └── views.py             # شارژ کیف‌پول
-├── reviews/                 # نقاشی و امتیاز‌دهی
-│   └── models.py            # Review
-├── config/                  # تنظیمات Django
-│   ├── settings/
-│   │   ├── base.py         # تنظیمات مشترک
-│   │   ├── dev.py          # تنظیمات توسعه
-│   │   └── production.py    # تنظیمات پروداکشن
-│   └── celery.py           # تنظیمات Celery
-├── templates/              # الگوهای HTML
-├── statics/                # فایل‌های CSS/JS
-├── docker-compose.yml      # تنظیم Docker
-├── Dockerfile              # ایمج Docker
-├── requirements.txt        # نیازمندی‌های Python
-└── manage.py               # خط فرمان Django
-```
-
-## 🧪 تست و QA
-
-### اجرای تست‌ها
 ```bash
-# تمام تست‌ها
-pytest
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 
-# تست یک اپ مشخص
-pytest patients/tests/
+cp .env.example .env
 
-# تست با coverage
-pytest --cov=.
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
 ```
 
-### ابزارهای مورد استفاده
-- **pytest**: فریم‌ورک تست
-- **pytest-django**: پلاگین Django برای pytest
-- **factory-boy**: ایجاد داده‌های تست
+برای اجرای کارهای ناهمگام (اختیاری در محیط توسعه):
 
-## 📚 مستندات اضافی
+```bash
+celery -A clinic_appointment_system worker -l info
+celery -A clinic_appointment_system beat -l info
+```
 
-- **ERD Diagram**: `documents/ERD.png` - نمودار رابطه‌ی مدل‌ها
-- **دستور کلی**: بررسی کنید `manage.py help`
-- **مستندات Django**: https://docs.djangoproject.com/
+## متغیرهای محیطی
 
-## 🤝 مشارکت و بهبود
+توضیح کامل متغیرها در فایل `.env.example` آمده است. مهم‌ترین‌ها:
 
-اگر ایراد یا پیشنهادی دارید:
-1. Issue جدید باز کنید
-2. یک pull request ارسال کنید
-3. تغییرات را به‌تفصیل توضیح دهید
+| متغیر | کاربرد |
+|---|---|
+| DJANGO_SETTINGS_MODULE | انتخاب محیط dev یا production |
+| SECRET_KEY, ALLOWED_HOSTS, CSRF_TRUSTED_ORIGINS | تنظیمات امنیتی production |
+| USE_SQLITE, DB_* | تنظیمات دیتابیس |
+| EMAIL_* | ارسال ایمیل واقعی |
+| GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET | ورود با گوگل |
+| SMS_BACKEND, SMS_API_KEY, SMS_SENDER_LINE | تنظیمات پیامک |
+| REDIS_URL | و کش celery  برای  Redis آدرس  |
 
-## 📄 لایسنس
+### ورود با گوگل
 
-این پروژه تحت لایسنس [MIT](LICENSE) است.
+۱. در Google Cloud Console یک OAuth Client ID از نوع Web application بسازید.
+۲. آدرس بازگشت را برابر بگذارید با:
+`https://<دامنه‌ی شما>/social-auth/google/login/callback/`
+۳. مقادیر GOOGLE_CLIENT_ID و GOOGLE_CLIENT_SECRET را در `.env` قرار دهید.
 
----
+### پیامک
+
+بک‌اند پیامک با متغیر SMS_BACKEND قابل تغییر است:
+
+| بک‌اند | کاربرد |
+|---|---|
+| sms.backends.console.ConsoleBackend | توسعه، چاپ در کنسول |
+| sms.backends.locmem.LocmemBackend | تست خودکار |
+| sms.backends.kavenegar.KavenegarBackend | پروداکشن |
+| sms.backends.mellipayamak.MelliPayamakBackend | جایگزین پروداکشن |
+
+برای افزودن پنل جدید، یک فایل مشابه در `sms/backends/` با متد send_message
+ایجاد کنید.
+
+## داده‌ی نمونه
+
+```bash
+python manage.py seed_demo_data
+python manage.py seed_demo_data --specialties 8 --doctors 12 --patients 30 --appointments 40 --password Test1234
+```
+
+## ساخت حساب پزشک
+
+حساب پزشک فقط از پنل ادمین ساخته می‌شود:
+
+۱. وارد `/admin/` شوید و از بخش Doctors گزینه‌ی Add Doctor را انتخاب کنید.
+۲. شماره تلفن، ایمیل، نام، تخصص، شماره نظام پزشکی و هزینه‌ی ویزیت را وارد
+کنید. رمز عبور اختیاری است و در صورت خالی‌بودن به‌صورت خودکار ساخته می‌شود.
+۳. اطلاعات ورود برای پزشک از طریق پیامک و ایمیل ارسال می‌شود.
+۴. پزشک از آدرس `/doctors/login/` یا با کد یکبار مصرف از
+`/doctors/login/otp/` وارد می‌شود.
+
+## تست‌ها
+
+```bash
+pytest
+pytest doctors/
+pytest -v -k login
+```
+
+تنظیمات تست مستقل از محیط توسعه است و از پایگاه‌داده‌ی SQLite در حافظه
+استفاده می‌کند؛ ایمیل و پیامک در این محیط ارسال واقعی ندارند.
+
+## لایسنس
+
+MIT — فایل LICENSE را ببینید.
