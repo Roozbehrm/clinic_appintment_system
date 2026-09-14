@@ -16,6 +16,15 @@
           <label class="form-label">نام و نام خانوادگی</label>
           {{ form.full_name }}
         </div>
+
+        <div class="mb-3">
+          <label class="form-label">تاریخ تولد</label>
+          {{ patient_form.birth_date }}
+          {% for error in patient_form.birth_date.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
         <div class="mb-3">
           <label class="form-label">تصویر پروفایل</label>
           <div class="d-flex flex-column align-items-center gap-2">

@@ -371,7 +371,7 @@ class ResetPasswordWithTokenView(View):
             return redirect("accounts:login")
         return render(request, self.template_name, {"form": form})
 
-
+from patients.forms import PatientForm
 class CompleteProfileView(LoginRequiredMixin, View):
     login_url = "accounts:login"
     template_name = "accounts/complete_profile.html"
@@ -379,33 +379,89 @@ class CompleteProfileView(LoginRequiredMixin, View):
     def get(self, request):
         form = ProfileForm(instance=request.user.profile)
         email_form = EmailChangeForm(user=request.user)
-        return render(request, self.template_name, {"form": form, "email_form": email_form})
+        patient_form = PatientForm(
+            instance=request.user.profile.patient
+        )
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "form": form,
+                "email_form": email_form,
+                "patient_form": patient_form,
+            }
+        )
 
     def post(self, request):
-        form = ProfileForm(request.POST, request.FILES, instance=request.user.profile)
-        email_form = EmailChangeForm(request.POST, user=request.user)
-        if form.is_valid():
+        form = ProfileForm(
+            request.POST,
+            request.FILES,
+            instance=request.user.profile
+        )
+
+        email_form = EmailChangeForm(
+            request.POST,
+            user=request.user
+        )
+
+        patient_form = PatientForm(
+            request.POST,
+            instance=request.user.profile.patient
+        )
+
+        if (
+            form.is_valid()
+            and email_form.is_valid()
+            and patient_form.is_valid()
+        ):
             form.save()
-        if form.is_valid() and email_form.is_valid():
+            patient_form.save()
+
             new_email = email_form.cleaned_data["email"]
+
             if new_email.lower() != request.user.email.lower():
                 token = signing.dumps(
                     {"user_id": request.user.pk, "email": new_email},
                     salt="email-change",
                 )
+
                 confirmation_url = request.build_absolute_uri(
-                    reverse("accounts:confirm_email_change", args=[token])
+                    reverse(
+                        "accounts:confirm_email_change",
+                        args=[token]
+                    )
                 )
+
                 send_email_task.delay(
                     "تایید تغییر ایمیل",
-                    f"برای تایید تغییر ایمیل روی لینک زیر کلیک کنید:\n\n{confirmation_url}\n\nاین لینک تا ۲۴ ساعت معتبر است.",
+                    f"برای تایید تغییر ایمیل روی لینک زیر کلیک کنید:\n\n"
+                    f"{confirmation_url}\n\n"
+                    f"این لینک تا ۲۴ ساعت معتبر است.",
                     [new_email],
                 )
-                messages.info(request, "لینک تایید به ایمیل جدید ارسال شد.")
-            messages.success(request, "پروفایل بروزرسانی شد.")
-            return redirect("accounts:redirect_after_login")
-        return render(request, self.template_name, {"form": form, "email_form": email_form})
 
+                messages.info(
+                    request,
+                    "لینک تایید به ایمیل جدید ارسال شد."
+                )
+
+            messages.success(
+                request,
+                "پروفایل بروزرسانی شد."
+            )
+
+            return redirect("accounts:redirect_after_login")
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "form": form,
+                "email_form": email_form,
+                "patient_form": patient_form,
+            }
+        )
 
 class ConfirmEmailChangeView(LoginRequiredMixin, View):
     login_url = "accounts:login"
