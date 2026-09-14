@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% load jalali %}
+
 {% block title %}نوبت‌های من{% endblock %}
 {% block content %}
 <div class="d-flex align-items-center gap-2 mb-3">
@@ -22,7 +24,7 @@
         {% elif a.status == "cancelled" %}<span class="badge bg-secondary">لغو شده</span>
         {% else %}<span class="badge bg-warning text-dark">در انتظار</span>{% endif %}
       </div>
-      <p class="text-muted mb-1">{{ a.time_slot.visit_date }} — {{ a.time_slot.start_time }}</p>
+      <p class="text-muted mb-1">{{ a.time_slot.visit_date|to_jalali }} — {{ a.time_slot.start_time }}</p>
       <p class="mb-2">هزینه: {{ a.price }} تومان</p>
       <div class="d-flex gap-2">
         {% if a.status == "confirmed" %}

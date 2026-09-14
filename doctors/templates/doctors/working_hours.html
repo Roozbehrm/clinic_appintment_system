@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% load jalali %}
+
 {% block title %}ساعات کاری{% endblock %}
 {% block content %}
 <div class="row g-4">
@@ -77,7 +79,7 @@
           {% for date, slots in slots_by_date.items %}
             <li class="nav-item">
               <button class="nav-link {% if forloop.first %}active{% endif %}" data-bs-toggle="pill" data-bs-target="#wh-d{{ forloop.counter }}">
-                {{ date }} <span class="badge bg-light text-dark">{{ slots|length }}</span>
+                {{ date|to_jalali }} <span class="badge bg-light text-dark">{{ slots|length }}</span>
               </button>
             </li>
           {% endfor %}

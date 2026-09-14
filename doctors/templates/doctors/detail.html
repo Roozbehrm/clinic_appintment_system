@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% load jalali %}
+
 {% block title %}دکتر {{ doctor.profile.full_name }}{% endblock %}
 {% block content %}
 <div class="card p-4 mb-4">
@@ -28,7 +30,7 @@
     <ul class="nav nav-pills mb-3" id="dateTabs">
       {% for date, slots in slots_by_date.items %}
         <li class="nav-item">
-          <button class="nav-link {% if forloop.first %}active{% endif %}" data-bs-toggle="pill" data-bs-target="#d{{ forloop.counter }}">{{ date }}</button>
+          <button class="nav-link {% if forloop.first %}active{% endif %}" data-bs-toggle="pill" data-bs-target="#d{{ forloop.counter }}">{{ date|to_jalali }}</button>
         </li>
       {% endfor %}
     </ul>
@@ -40,7 +42,7 @@
               <form method="post" action="{% url 'appointments:book' slot.id %}">
                 {% csrf_token %}
                 <button class="btn btn-outline-primary slot-btn" type="submit"
-                        onclick="return confirm('رزرو نوبت {{ slot.start_time }} در تاریخ {{ date }} با هزینه {{ doctor.consultation_fee }} تومان؟');">
+                        onclick="return confirm('رزرو نوبت {{ slot.start_time }} در تاریخ {{ date|to_jalali }} با هزینه {{ doctor.consultation_fee }} تومان؟');">
                   {{ slot.start_time }}
                 </button>
               </form>

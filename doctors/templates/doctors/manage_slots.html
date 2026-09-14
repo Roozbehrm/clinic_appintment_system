@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% load jalali %}
+
 {% block title %}نوبت‌های من{% endblock %}
 {% block content %}
 <h4 class="mb-3">نوبت‌ها</h4>
@@ -8,7 +10,7 @@
     <tbody>
       {% for slot in slots %}
       <tr>
-        <td>{{ slot.visit_date }}</td>
+        <td>{{ slot.visit_date|to_jalali }}</td>
         <td>{{ slot.start_time }} - {{ slot.end_time }}</td>
         <td>
           {% if slot.status == "free" %}<span class="badge bg-success">خالی</span>
