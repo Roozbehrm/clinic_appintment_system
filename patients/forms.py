@@ -8,7 +8,7 @@ from .models import Patient
 class PatientForm(forms.ModelForm):
 
     birth_date = forms.CharField(
-        required=False,
+        required=True,
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
