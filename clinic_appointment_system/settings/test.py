@@ -27,3 +27,10 @@ MEDIA_ROOT = tempfile.mkdtemp(prefix="medapp_test_media_")
 # Celery tasks are executed synchronously during tests to simplify testing and avoid the need for a running Celery worker or broker.
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "clinic-appointment-test",
+    }
+}

@@ -41,3 +41,11 @@ CELERY_TASK_EAGER_PROPAGATES = True
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 SECURE_SSL_REDIRECT = False
+
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "clinic-appointment-dev",
+    }
+}
