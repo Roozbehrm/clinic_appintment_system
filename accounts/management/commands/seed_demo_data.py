@@ -24,7 +24,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--specialties", type=int, default=6, help="تعداد تخصص‌ها")
-        parser.add_argument("--doctors", type=int, default=8, help="تعداد پزشکان")
+        parser.add_argument("--doctors", type=int, default=12, help="تعداد پزشکان")
         parser.add_argument("--patients", type=int, default=20, help="تعداد بیماران")
         parser.add_argument("--appointments", type=int, default=25, help="تعداد نوبت‌های رزروشده")
         parser.add_argument("--password", type=str, default="Password123",
