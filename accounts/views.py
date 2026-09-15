@@ -16,7 +16,7 @@ from .forms import (RegisterForm, QuickRegisterForm, OTPVerifyForm, LoginForm, P
 from .models import User, OTP, Profile
 from .services import issue_otp, find_user_by_identifier, send_new_account_credentials
 from .tasks import send_email_task
-
+from patients.forms import PatientForm
 
 class RegisterView(View):
     template_name = "accounts/register.html"
@@ -371,7 +371,7 @@ class ResetPasswordWithTokenView(View):
             return redirect("accounts:login")
         return render(request, self.template_name, {"form": form})
 
-from patients.forms import PatientForm
+
 class CompleteProfileView(LoginRequiredMixin, View):
     login_url = "accounts:login"
     template_name = "accounts/complete_profile.html"
@@ -379,8 +379,10 @@ class CompleteProfileView(LoginRequiredMixin, View):
     def get(self, request):
         form = ProfileForm(instance=request.user.profile)
         email_form = EmailChangeForm(user=request.user)
-        patient_form = PatientForm(
-            instance=request.user.profile.patient
+        patient_form = (
+            PatientForm(instance=request.user.profile.patient)
+            if request.user.is_patient
+            else None
         )
 
         return render(
@@ -405,18 +407,18 @@ class CompleteProfileView(LoginRequiredMixin, View):
             user=request.user
         )
 
-        patient_form = PatientForm(
-            request.POST,
-            instance=request.user.profile.patient
+        patient_form = (
+            PatientForm(request.POST, instance=request.user.profile.patient)
+            if request.user.is_patient
+            else None
         )
 
-        if (
-            form.is_valid()
-            and email_form.is_valid()
-            and patient_form.is_valid()
-        ):
+        patient_form_ok = patient_form is None or patient_form.is_valid()
+
+        if form.is_valid() and email_form.is_valid() and patient_form_ok:
             form.save()
-            patient_form.save()
+            if patient_form is not None:
+                patient_form.save()
 
             new_email = email_form.cleaned_data["email"]
 
@@ -463,6 +465,7 @@ class CompleteProfileView(LoginRequiredMixin, View):
             }
         )
 
+    
 class ConfirmEmailChangeView(LoginRequiredMixin, View):
     login_url = "accounts:login"
 
